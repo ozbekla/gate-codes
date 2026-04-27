@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kapı Kodları">
+<title>Kapı Kodları</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  :root {
+    --bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c28;--border:#2a2a3a;
+    --accent:#00e5a0;--accent2:#0099ff;--warn:#ff6b35;
+    --text:#f0f0f5;--text2:#8888aa;--text3:#55556a;
+    --radius:16px;--mono:'Space Mono',monospace;--sans:'DM Sans',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+  .header{position:sticky;top:0;z-index:100;background:rgba(10,10,15,.94);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:14px 20px 12px;display:flex;align-items:center;justify-content:space-between;}
+  .header-title{font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;}
+  .header-subtitle{font-size:11px;color:var(--text3);margin-top:2px;}
+  .scan-btn{background:var(--accent);color:#000;border:none;border-radius:10px;padding:8px 14px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;}
+  .scan-btn:active{opacity:.7;}
+
+  #nearby-banner{display:none;margin:12px 16px 0;background:linear-gradient(135deg,#00e5a015,#0099ff10);border:1px solid var(--accent);border-radius:var(--radius);padding:14px 16px;}
+  .nearby-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+  .nearby-dot{width:8px;height:8px;background:var(--accent);border-radius:50%;animation:pulse 1.5s infinite;}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 #00e5a060}50%{box-shadow:0 0 0 6px #00e5a000}}
+  .nearby-title{font-size:12px;color:var(--accent);font-weight:600;letter-spacing:.5px;}
+  .nearby-cards{display:flex;flex-direction:column;gap:8px;}
+  .nearby-card{background:var(--surface);border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+  .nearby-card-name{font-size:13px;font-weight:500;}
+  .nearby-card-dist{font-size:11px;color:var(--text3);margin-top:2px;}
+  .nearby-codes{display:flex;gap:6px;flex-wrap:wrap;}
+  .code-chip{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-family:var(--mono);font-size:14px;color:var(--accent);font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;}
+  .code-chip:active{background:var(--accent);color:#000;}
+  .chip-label{font-size:9px;color:var(--text3);font-family:var(--sans);text-transform:uppercase;letter-spacing:.5px;}
+
+  .tabs{display:flex;margin:16px 16px 0;background:var(--surface);border-radius:12px;padding:4px;}
+  .tab{flex:1;padding:9px 0;border:none;border-radius:9px;background:transparent;color:var(--text3);font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;}
+  .tab.active{background:var(--surface2);color:var(--text);}
+  .content{padding:12px 16px 100px;}
+
+  .loc-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;transition:border-color .2s;}
+  .loc-card.is-nearby{border-color:var(--accent);}
+  .loc-card-hdr{padding:14px 16px 12px;display:flex;align-items:flex-start;cursor:pointer;}
+  .loc-icon{width:36px;height:36px;border-radius:10px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;margin-right:12px;}
+  .loc-info{flex:1;}
+  .loc-name{font-size:15px;font-weight:600;line-height:1.2;}
+  .loc-addr{font-size:12px;color:var(--text3);margin-top:3px;line-height:1.4;}
+  .loc-meta{display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap;}
+  .badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;}
+  .badge-nearby{background:#00e5a020;color:var(--accent);border:1px solid #00e5a040;}
+  .badge-cnt{background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
+  .badge-nocoord{background:#ff6b3515;color:var(--warn);border:1px solid #ff6b3530;}
+  .chevron{color:var(--text3);font-size:12px;transition:transform .2s;margin-top:2px;margin-left:8px;flex-shrink:0;}
+  .loc-card.open .chevron{transform:rotate(180deg);}
+  .loc-entries{display:none;border-top:1px solid var(--border);}
+  .loc-card.open .loc-entries{display:block;}
+  .entry-row{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+  .entry-row:last-child{border-bottom:none;}
+  .entry-lbl{font-size:12px;color:var(--text2);margin-bottom:2px;}
+  .entry-code{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--accent);letter-spacing:3px;}
+  .copy-btn{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text2);font-size:16px;cursor:pointer;flex-shrink:0;}
+  .copy-btn:active{background:var(--accent);color:#000;}
+  .entry-actions{padding:8px 16px 12px;display:flex;gap:8px;}
+  .btn-sm{flex:1;padding:8px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-family:var(--sans);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;}
+  .btn-sm:active{background:var(--surface2);}
+  .btn-sm.danger{color:var(--warn);border-color:#ff6b3530;}
+
+  .fab{position:fixed;bottom:28px;right:20px;z-index:200;width:58px;height:58px;border-radius:20px;background:var(--accent);border:none;color:#000;font-size:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 24px #00e5a040;}
+  .fab:active{transform:scale(.93);}
+
+  .modal-overlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);display:none;align-items:flex-end;}
+  .modal-overlay.open{display:flex;}
+  .modal{width:100%;max-height:92vh;background:var(--surface);border-radius:24px 24px 0 0;overflow-y:auto;padding-bottom:40px;}
+  .modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 0;}
+  .modal-title{font-size:17px;font-weight:600;padding:16px 20px 0;}
+  .fsec{padding:14px 20px 0;}
+  .flabel{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:block;}
+  .finput,.fselect,.ftextarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--text);font-family:var(--sans);font-size:15px;outline:none;-webkit-appearance:none;appearance:none;}
+  .finput:focus,.fselect:focus,.ftextarea:focus{border-color:var(--accent);}
+  .finput.ccode{font-family:var(--mono);font-size:20px;font-weight:700;letter-spacing:4px;color:var(--accent);}
+  .ftextarea{resize:none;min-height:60px;}
+  .fselect option{background:var(--surface);}
+
+  .addr-row{display:flex;gap:8px;}
+  .addr-row .finput{flex:1;}
+  .addr-search-btn{background:var(--accent2);border:none;border-radius:10px;padding:11px 14px;color:#fff;font-size:16px;cursor:pointer;flex-shrink:0;}
+  .addr-results{margin-top:6px;display:none;}
+  .addr-result-item{padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:4px;font-size:13px;cursor:pointer;line-height:1.4;}
+  .addr-result-item:active{border-color:var(--accent);}
+
+  .map-wrap{margin:10px 20px 0;border-radius:14px;overflow:hidden;border:1px solid var(--border);position:relative;}
+  #loc-map{height:200px;width:100%;background:var(--surface2);}
+  .map-hint{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.75);color:var(--text2);font-size:11px;padding:4px 10px;border-radius:20px;pointer-events:none;white-space:nowrap;z-index:1000;}
+
+  .gps-row{display:flex;gap:8px;margin-top:8px;}
+  .gps-btn{flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:13px;font-family:var(--sans);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
+  .gps-btn.primary{border-color:var(--accent);color:var(--accent);}
+  .loc-status{font-size:11px;color:var(--text3);margin-top:6px;}
+  .loc-status.ok{color:var(--accent);}
+  .loc-status.err{color:var(--warn);}
+
+  .radius-wrap{display:flex;align-items:center;gap:12px;}
+  .rslider{flex:1;-webkit-appearance:none;height:4px;background:var(--border);border-radius:2px;outline:none;}
+  .rslider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;background:var(--accent);border-radius:50%;cursor:pointer;}
+  .rval{font-family:var(--mono);font-size:13px;color:var(--accent);min-width:60px;text-align:right;}
+
+  .codes-list{display:flex;flex-direction:column;gap:8px;}
+  .code-row{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;}
+  .code-row .finput{background:transparent;border:none;padding:0;flex:1;}
+  .code-row .finput.ccode{font-size:18px;}
+  .code-row-del{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:4px;}
+  .add-code-btn{width:100%;padding:10px;border:1px dashed var(--border);border-radius:10px;background:transparent;color:var(--text3);font-size:13px;cursor:pointer;margin-top:6px;}
+
+  .modal-actions{padding:20px 20px 16px;display:flex;gap:10px;}
+  .btn-cancel{flex:1;padding:14px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:var(--sans);font-size:15px;cursor:pointer;}
+  .btn-save{flex:2;padding:14px;border-radius:12px;border:none;background:var(--accent);color:#000;font-family:var(--sans);font-size:15px;font-weight:600;cursor:pointer;}
+
+  .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:500;opacity:0;transition:opacity .2s;white-space:nowrap;pointer-events:none;}
+  .toast.show{opacity:1;}
+
+  .empty{text-align:center;padding:60px 20px;color:var(--text3);}
+  .empty-icon{font-size:48px;margin-bottom:12px;}
+  .empty-title{font-size:16px;color:var(--text2);font-weight:500;margin-bottom:6px;}
+  .empty-sub{font-size:13px;line-height:1.6;}
+
+  .settings-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;}
+  .settings-row{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .settings-row:last-child{border-bottom:none;}
+  .settings-row-label{font-size:14px;}
+  .settings-row-sub{font-size:12px;color:var(--text3);margin-top:2px;}
+  .toggle{width:44px;height:26px;background:var(--border);border-radius:13px;position:relative;cursor:pointer;transition:background .2s;border:none;flex-shrink:0;}
+  .toggle.on{background:var(--accent);}
+  .toggle::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform .2s;}
+  .toggle.on::after{transform:translateX(18px);}
+  .unit-toggle{display:flex;background:var(--bg);border-radius:8px;padding:3px;gap:2px;}
+  .unit-btn{flex:1;padding:6px 12px;border:none;border-radius:6px;background:transparent;color:var(--text3);font-size:13px;font-family:var(--sans);cursor:pointer;}
+  .unit-btn.active{background:var(--accent);color:#000;font-weight:600;}
+
+  #scan-overlay{display:none;position:fixed;inset:0;z-index:400;background:var(--bg);align-items:center;justify-content:center;flex-direction:column;gap:16px;text-align:center;padding:40px;}
+  #scan-overlay.show{display:flex;}
+  .scan-ring{width:80px;height:80px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--accent);animation:spin 1s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .scan-cancel{margin-top:12px;padding:12px 28px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:15px;cursor:pointer;}
+
+  .leaflet-tile{filter:brightness(.7) saturate(.6) invert(1) hue-rotate(180deg);}
+  .leaflet-container{background:#1a1a2a;}
+  .leaflet-control-zoom a{background:var(--surface2)!important;color:var(--text)!important;border-color:var(--border)!important;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">🔑 Kapı Kodları</div>
+    <div class="header-subtitle" id="header-sub">0 kayıtlı yer</div>
+  </div>
+  <button class="scan-btn" onclick="scanNearby()">📡 Tara</button>
+</div>
+
+<div id="nearby-banner"></div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('locations')">Yerler</button>
+  <button class="tab" onclick="showTab('settings')">Ayarlar</button>
+</div>
+
+<div class="content" id="tab-locations"><div id="locations-list"></div></div>
+
+<div class="content" id="tab-settings" style="display:none">
+  <div class="settings-section">
+    <div class="settings-row">
+      <div><div class="settings-row-label">Otomatik Tarama</div><div class="settings-row-sub">Açılışta yakın yerleri göster</div></div>
+      <button class="toggle on" id="toggle-autoscan" onclick="toggleSetting('autoscan',this)"></button>
+    </div>
+    <div class="settings-row">
+      <div><div class="settings-row-label">Mesafe Birimi</div><div class="settings-row-sub">Feet/Miles veya Metre/Km</div></div>
+      <div class="unit-toggle">
+        <button class="unit-btn active" id="unit-btn-imperial" onclick="setUnit('imperial')">ft/mi</button>
+        <button class="unit-btn" id="unit-btn-metric" onclick="setUnit('metric')">m/km</button>
+      </div>
+    </div>
+    <div class="settings-row">
+      <div style="flex:1">
+        <div class="settings-row-label">Varsayılan Mesafe: <span id="default-radius-label" style="color:var(--accent);font-family:var(--mono)">300 ft</span></div>
+        <div class="settings-row-sub">Yeni kayıtlarda önerilen eşik</div>
+        <input type="range" class="rslider" min="1" max="20" step="1" id="default-radius-slider" value="10" oninput="updateDefaultRadius(this.value)" style="margin-top:8px;width:100%">
+      </div>
+    </div>
+  </div>
+  <div class="settings-section">
+    <div class="settings-row" onclick="exportData()" style="cursor:pointer">
+      <div><div class="settings-row-label">Verileri Dışa Aktar</div><div class="settings-row-sub">JSON yedek al</div></div>
+      <span style="color:var(--text3)">→</span>
+    </div>
+    <div class="settings-row" onclick="importData()" style="cursor:pointer">
+      <div><div class="settings-row-label">Verileri İçe Aktar</div><div class="settings-row-sub">JSON dosyasından yükle</div></div>
+      <span style="color:var(--text3)">→</span>
+    </div>
+  </div>
+  <div class="settings-section">
+    <div class="settings-row" onclick="if(confirm('Tüm veriler silinecek!'))clearAll()" style="cursor:pointer">
+      <div><div class="settings-row-label" style="color:var(--warn)">Tüm Verileri Sil</div></div>
+      <span>⚠️</span>
+    </div>
+  </div>
+  <div style="text-align:center;padding:20px 0;color:var(--text3);font-size:12px;font-family:var(--mono)">v1.3.0 · Local · OSM · US</div>
+</div>
+
+<button class="fab" onclick="openAdd()">+</button>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-title">Yeni Yer Ekle</div>
+    <div class="fsec">
+      <label class="flabel">Yer Adı *</label>
+      <input type="text" class="finput" id="f-name" placeholder="Maple Grove Apt, Building A...">
+    </div>
+    <div class="fsec">
+      <label class="flabel">Kategori</label>
+      <select class="fselect" id="f-type">
+        <option value="🏘️">🏘️ Apartment Complex</option>
+        <option value="🏢">🏢 Office / Business</option>
+        <option value="🏠">🏠 House / Villa</option>
+        <option value="🏗️">🏗️ Building / Block</option>
+        <option value="🚪">🚪 Main Gate</option>
+        <option value="🅿️">🅿️ Parking Garage</option>
+        <option value="📦">📦 Warehouse / Depot</option>
+        <option value="⭐">⭐ Other</option>
+      </select>
+    </div>
+    <div class="fsec">
+      <label class="flabel">Adres Ara (US)</label>
+      <div class="addr-row">
+        <input type="text" class="finput" id="f-addr" placeholder="123 Main St, Austin TX..." onkeydown="if(event.key==='Enter'){event.preventDefault();searchAddress()}">
+        <button class="addr-search-btn" onclick="searchAddress()">🔍</button>
+      </div>
+      <div class="addr-results" id="addr-results"></div>
+    </div>
+    <div class="map-wrap">
+      <div id="loc-map"></div>
+      <div class="map-hint">📌 Tap map or drag pin to adjust</div>
+    </div>
+    <div class="fsec">
+      <div class="gps-row">
+        <button class="gps-btn primary" onclick="getGPS()">📍 GPS'ten Al</button>
+        <button class="gps-btn" onclick="clearLocation()">✕ Konumu Sil</button>
+      </div>
+      <div class="loc-status" id="loc-status">Adres ara veya GPS al</div>
+    </div>
+    <input type="hidden" id="f-lat">
+    <input type="hidden" id="f-lng">
+    <div class="fsec">
+      <label class="flabel">Yakınlık Eşiği</label>
+      <div class="radius-wrap">
+        <input type="range" class="rslider" min="1" max="20" step="1" id="f-radius" value="10" oninput="updateRadiusLabel(this.value)">
+        <span class="rval" id="f-rval">300 ft</span>
+      </div>
+    </div>
+    <div class="fsec">
+      <label class="flabel">Kodlar *</label>
+      <div class="codes-list" id="codes-list"></div>
+      <button class="add-code-btn" onclick="addCodeRow()">+ Kod Ekle</button>
+    </div>
+    <div class="fsec">
+      <label class="flabel">Not</label>
+      <textarea class="ftextarea" id="f-note" placeholder="Ek bilgi..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">İptal</button>
+      <button class="btn-save" onclick="saveLocation()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<div id="scan-overlay">
+  <div class="scan-ring"></div>
+  <div style="font-size:18px;font-weight:600">Konum Alınıyor</div>
+  <div style="font-size:13px;color:var(--text3);line-height:1.6;margin-top:4px">GPS alınıyor, yakın yerler aranıyor...</div>
+  <button class="scan-cancel" onclick="cancelScan()">İptal</button>
+</div>
+
+<div class="toast" id="toast"></div>
+<input type="file" id="import-input" accept=".json" style="display:none" onchange="handleImport(event)">
+
+<script>
+// ── SAFE STORAGE ────────────────────────────────────────────
+// Works even when localStorage is blocked (file://, private mode, etc.)
+var _memStore = {};
+var _useLS = (function(){
+  try { localStorage.setItem('_t','1'); localStorage.removeItem('_t'); return true; }
+  catch(e){ return false; }
+})();
+
+function storeSet(k,v){
+  try{ if(_useLS) localStorage.setItem(k,v); else _memStore[k]=v; }
+  catch(e){ _memStore[k]=v; }
+}
+function storeGet(k){
+  try{ return _useLS ? localStorage.getItem(k) : (_memStore[k]||null); }
+  catch(e){ return _memStore[k]||null; }
+}
+
+// ── UNIT HELPERS ────────────────────────────────────────────
+var STEP_TO_M_IMP = 9.144; // ~30ft per step
+var STEP_TO_M_MET = 10;
+
+function stepToMeters(step){
+  return settings.unit==='metric' ? step*STEP_TO_M_MET : step*STEP_TO_M_IMP;
+}
+function metersToStep(m){
+  var div = settings.unit==='metric' ? STEP_TO_M_MET : STEP_TO_M_IMP;
+  return Math.max(1,Math.min(20,Math.round(m/div)));
+}
+function formatDist(meters){
+  if(settings.unit==='metric'){
+    return meters>=1000 ? (meters/1000).toFixed(1)+' km' : Math.round(meters)+' m';
+  }
+  var ft=meters*3.28084;
+  return ft>=5280 ? (ft/5280).toFixed(2)+' mi' : Math.round(ft)+' ft';
+}
+function sliderLabel(step){ return formatDist(stepToMeters(step)); }
+
+// ── STATE ──────────────────────────────────────────────────
+var locations=[], settings={autoscan:true,defaultRadius:10,unit:'imperial'};
+var editingId=null, scanTimeout=null, locMap=null, locMarker=null, nearbyIds=[];
+
+function save(){
+  storeSet('gatekeeper_v1', JSON.stringify({locations:locations,settings:settings}));
+}
+function load(){
+  try{
+    var raw=storeGet('gatekeeper_v1');
+    if(raw){
+      var d=JSON.parse(raw);
+      locations=d.locations||[];
+      settings=Object.assign({autoscan:true,defaultRadius:10,unit:'imperial'},d.settings||{});
+    }
+  }catch(e){ locations=[]; }
+}
+
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function distM(a,b,c,d){
+  var R=6371000,dL=(c-a)*Math.PI/180,dN=(d-b)*Math.PI/180;
+  var x=Math.sin(dL/2)*Math.sin(dL/2)+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dN/2)*Math.sin(dN/2);
+  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+}
+function toast(msg,dur){
+  dur=dur||2200;
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},dur);
+}
+function copyText(text){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){toast('📋 '+text);}).catch(function(){toast(text);});
+  } else { toast(text); }
+}
+
+// ── TABS ───────────────────────────────────────────────────
+function showTab(tab){
+  document.getElementById('tab-locations').style.display=tab==='locations'?'':'none';
+  document.getElementById('tab-settings').style.display=tab==='settings'?'':'none';
+  var tabs=document.querySelectorAll('.tab');
+  tabs[0].classList.toggle('active',tab==='locations');
+  tabs[1].classList.toggle('active',tab==='settings');
+}
+
+// ── RENDER ─────────────────────────────────────────────────
+function render(nids){
+  nids=nids||[];
+  nearbyIds=nids;
+  var list=document.getElementById('locations-list');
+  if(!locations.length){
+    list.innerHTML='<div class="empty"><div class="empty-icon">🔑</div><div class="empty-title">Henüz kayıt yok</div><div class="empty-sub">Gittiğin binalara kod eklemek için<br>+ butonuna bas</div></div>';
+    document.getElementById('header-sub').textContent='0 kayıtlı yer';
+    return;
+  }
+  var sorted=locations.slice().sort(function(a,b){
+    var aN=nids.indexOf(a.id)>=0?0:1, bN=nids.indexOf(b.id)>=0?0:1;
+    return aN-bN||(b.updatedAt||0)-(a.updatedAt||0);
+  });
+  var html='';
+  for(var i=0;i<sorted.length;i++){
+    var loc=sorted[i];
+    var isN=nids.indexOf(loc.id)>=0;
+    var codes=loc.codes||[];
+    var hasC=loc.lat&&loc.lng;
+    var rLabel=hasC?formatDist(loc.radiusM||stepToMeters(loc.radius||10)):null;
+    html+='<div class="loc-card'+(isN?' is-nearby':'')+'" id="card-'+loc.id+'">';
+    html+='<div class="loc-card-hdr" onclick="toggleCard(\''+loc.id+'\')">';
+    html+='<div class="loc-icon">'+(loc.type||'📍')+'</div>';
+    html+='<div class="loc-info">';
+    html+='<div class="loc-name">'+esc(loc.name)+'</div>';
+    if(loc.addr) html+='<div class="loc-addr">'+esc(loc.addr)+'</div>';
+    html+='<div class="loc-meta">';
+    if(isN) html+='<span class="badge badge-nearby">● Nearby</span>';
+    html+='<span class="badge badge-cnt">'+codes.length+' kod</span>';
+    if(hasC) html+='<span class="badge badge-cnt">'+rLabel+'</span>';
+    else html+='<span class="badge badge-nocoord">📍 No location</span>';
+    html+='</div></div><div class="chevron">▼</div></div>';
+    html+='<div class="loc-entries">';
+    for(var j=0;j<codes.length;j++){
+      var c=codes[j];
+      html+='<div class="entry-row">';
+      html+='<div style="flex:1">';
+      if(c.label) html+='<div class="entry-lbl">'+esc(c.label)+'</div>';
+      html+='<div class="entry-code">'+esc(c.code)+'</div>';
+      html+='</div>';
+      html+='<button class="copy-btn" onclick="copyText(\''+esc(c.code)+'\')">📋</button>';
+      html+='</div>';
+    }
+    html+='<div class="entry-actions">';
+    html+='<button class="btn-sm" onclick="openEdit(\''+loc.id+'\')">✏️ Düzenle</button>';
+    html+='<button class="btn-sm danger" onclick="deleteLocation(\''+loc.id+'\')">🗑 Sil</button>';
+    html+='</div></div></div>';
+  }
+  list.innerHTML=html;
+  document.getElementById('header-sub').textContent=locations.length+' kayıtlı yer'+(nids.length?' · '+nids.length+' nearby':'');
+}
+
+function toggleCard(id){ var c=document.getElementById('card-'+id); if(c) c.classList.toggle('open'); }
+
+// ── NEARBY BANNER ──────────────────────────────────────────
+function showNearbyBanner(nl){
+  var b=document.getElementById('nearby-banner');
+  if(!nl||!nl.length){b.style.display='none';return;}
+  b.style.display='block';
+  var html='<div class="nearby-header"><div class="nearby-dot"></div><div class="nearby-title">BURAYA DAHA ÖNCE GELDİN!</div></div><div class="nearby-cards">';
+  for(var i=0;i<nl.length;i++){
+    var loc=nl[i].loc, d=nl[i].d;
+    html+='<div class="nearby-card"><div style="flex:1"><div class="nearby-card-name">'+(loc.type||'')+" "+esc(loc.name)+'</div><div class="nearby-card-dist">'+formatDist(d)+' away</div></div><div class="nearby-codes">';
+    var codes=loc.codes||[];
+    for(var j=0;j<codes.length;j++){
+      var c=codes[j];
+      html+='<div class="code-chip" onclick="copyText(\''+esc(c.code)+'\')">';
+      if(c.label) html+='<span class="chip-label">'+esc(c.label)+'</span>';
+      html+=esc(c.code)+'</div>';
+    }
+    html+='</div></div>';
+  }
+  html+='</div>';
+  b.innerHTML=html;
+}
+
+// ── SCAN ───────────────────────────────────────────────────
+function scanNearby(silent){
+  if(!navigator.geolocation){if(!silent)toast('❌ Konum desteklenmiyor');return;}
+  if(!silent) document.getElementById('scan-overlay').classList.add('show');
+  scanTimeout=setTimeout(function(){
+    document.getElementById('scan-overlay').classList.remove('show');
+    if(!silent) toast('⏱ Konum alınamadı');
+  },10000);
+  navigator.geolocation.getCurrentPosition(function(pos){
+    clearTimeout(scanTimeout);
+    document.getElementById('scan-overlay').classList.remove('show');
+    var lat=pos.coords.latitude, lng=pos.coords.longitude;
+    var nl=[];
+    for(var i=0;i<locations.length;i++){
+      var loc=locations[i];
+      if(!loc.lat||!loc.lng) continue;
+      var d=distM(lat,lng,loc.lat,loc.lng);
+      var thresh=loc.radiusM||stepToMeters(loc.radius||10);
+      if(d<=thresh) nl.push({loc:loc,d:d});
+    }
+    nl.sort(function(a,b){return a.d-b.d;});
+    var ids=nl.map(function(n){return n.loc.id;});
+    render(ids); showNearbyBanner(nl);
+    ids.forEach(function(id){var c=document.getElementById('card-'+id);if(c&&!c.classList.contains('open'))c.classList.add('open');});
+    if(!silent) toast(ids.length?'📍 '+ids.length+' yakın yer!':'📍 Yakında kayıt yok');
+  },function(err){
+    clearTimeout(scanTimeout);
+    document.getElementById('scan-overlay').classList.remove('show');
+    if(!silent){
+      if(err.code===1) toast('❌ Location permission needed → Settings→Safari→Location');
+      else toast('❌ Location unavailable');
+    }
+  },{enableHighAccuracy:true,timeout:9000});
+}
+function cancelScan(){ clearTimeout(scanTimeout); document.getElementById('scan-overlay').classList.remove('show'); }
+
+// ── MAP ────────────────────────────────────────────────────
+function makeIcon(){
+  return L.divIcon({
+    html:'<div style="width:26px;height:26px;background:#00e5a0;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.6)"></div>',
+    iconSize:[26,26],iconAnchor:[13,26],className:''
+  });
+}
+function initMap(lat,lng){
+  if(!locMap){
+    locMap=L.map('loc-map',{zoomControl:true,attributionControl:false});
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(locMap);
+    locMap.on('click',function(e){placePin(e.latlng.lat,e.latlng.lng);});
+  }
+  locMap.setView((lat&&lng)?[lat,lng]:[37.09,-95.71],(lat&&lng)?17:4);
+  if(locMarker){locMap.removeLayer(locMarker);locMarker=null;}
+  if(lat&&lng){
+    locMarker=L.marker([lat,lng],{icon:makeIcon(),draggable:true}).addTo(locMap);
+    locMarker.on('dragend',function(e){var p=e.target.getLatLng();pinUpdated(p.lat,p.lng,'drag');});
+  }
+  setTimeout(function(){locMap.invalidateSize();},150);
+}
+function placePin(lat,lng){
+  document.getElementById('f-lat').value=lat;
+  document.getElementById('f-lng').value=lng;
+  setLocStatus('📌 '+lat.toFixed(5)+', '+lng.toFixed(5),'ok');
+  if(locMarker) locMap.removeLayer(locMarker);
+  locMarker=L.marker([lat,lng],{icon:makeIcon(),draggable:true}).addTo(locMap);
+  locMarker.on('dragend',function(e){var p=e.target.getLatLng();pinUpdated(p.lat,p.lng,'drag');});
+}
+function pinUpdated(lat,lng,src){
+  document.getElementById('f-lat').value=lat;
+  document.getElementById('f-lng').value=lng;
+  setLocStatus('✅ '+lat.toFixed(5)+', '+lng.toFixed(5)+' ('+src+')','ok');
+}
+function setLocStatus(msg,cls){
+  var el=document.getElementById('loc-status');
+  el.textContent=msg; el.className='loc-status'+(cls?' '+cls:'');
+}
+
+// ── ADDRESS SEARCH ─────────────────────────────────────────
+function searchAddress(){
+  var q=document.getElementById('f-addr').value.trim();
+  if(!q||q.length<3){toast('En az 3 karakter gir');return;}
+  setLocStatus('🔍 Searching...');
+  fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q)+'&format=json&limit=6&countrycodes=us&accept-language=en')
+    .then(function(r){return r.json();})
+    .then(function(data){
+      var res=document.getElementById('addr-results');
+      if(!data||!data.length){res.style.display='none';toast('No results');setLocStatus('No results');return;}
+      res.style.display='block';
+      var html='';
+      for(var i=0;i<data.length;i++){
+        var d=data[i];
+        var short=d.display_name.split(',').slice(0,4).join(',');
+        var display=d.display_name.split(',').slice(0,3).join(', ');
+        html+='<div class="addr-result-item" onclick="pickAddr('+d.lat+','+d.lon+',\''+esc(short)+'\')">'+display+'</div>';
+      }
+      res.innerHTML=html;
+      setLocStatus(data.length+' results — pick one');
+    })
+    .catch(function(){toast('❌ Search failed');setLocStatus('Search error');});
+}
+function pickAddr(lat,lng,name){
+  lat=parseFloat(lat); lng=parseFloat(lng);
+  var short=name.split(',').slice(0,3).join(',').trim();
+  document.getElementById('f-addr').value=short;
+  document.getElementById('addr-results').style.display='none';
+  setLocStatus('✅ '+short,'ok');
+  document.getElementById('f-lat').value=lat;
+  document.getElementById('f-lng').value=lng;
+  if(locMap){
+    locMap.setView([lat,lng],17);
+    if(locMarker) locMap.removeLayer(locMarker);
+    locMarker=L.marker([lat,lng],{icon:makeIcon(),draggable:true}).addTo(locMap);
+    locMarker.on('dragend',function(e){var p=e.target.getLatLng();pinUpdated(p.lat,p.lng,'drag');});
+  }
+}
+
+// ── GPS ────────────────────────────────────────────────────
+function getGPS(){
+  setLocStatus('⏳ Getting GPS...');
+  navigator.geolocation.getCurrentPosition(function(pos){
+    var lat=pos.coords.latitude, lng=pos.coords.longitude;
+    pinUpdated(lat,lng,'GPS');
+    initMap(lat,lng);
+    if(!document.getElementById('f-addr').value){
+      fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lng+'&format=json&accept-language=en')
+        .then(function(r){return r.json();})
+        .then(function(d){document.getElementById('f-addr').value=d.display_name.split(',').slice(0,4).join(',').trim();})
+        .catch(function(){});
+    }
+  },function(err){
+    if(err.code===1){setLocStatus('❌ Permission denied → Settings→Safari→Location','err');toast('❌ Location permission needed');}
+    else setLocStatus('❌ GPS unavailable','err');
+  },{enableHighAccuracy:true,timeout:8000});
+}
+function clearLocation(){
+  document.getElementById('f-lat').value='';
+  document.getElementById('f-lng').value='';
+  if(locMarker&&locMap){locMap.removeLayer(locMarker);locMarker=null;}
+  setLocStatus('Location cleared');
+}
+
+// ── RADIUS ─────────────────────────────────────────────────
+function updateRadiusLabel(step){
+  document.getElementById('f-rval').textContent=sliderLabel(parseInt(step));
+}
+
+// ── MODAL ──────────────────────────────────────────────────
+function openAdd(){
+  editingId=null;
+  document.getElementById('modal-title').textContent='Yeni Yer Ekle';
+  ['f-name','f-addr','f-lat','f-lng','f-note'].forEach(function(id){document.getElementById(id).value='';});
+  var defStep=settings.defaultRadius||10;
+  document.getElementById('f-radius').value=defStep;
+  document.getElementById('f-rval').textContent=sliderLabel(defStep);
+  document.getElementById('f-type').value='🏘️';
+  setLocStatus('Adres ara veya GPS al');
+  document.getElementById('addr-results').style.display='none';
+  document.getElementById('codes-list').innerHTML='';
+  addCodeRow();
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(function(){if(locMarker&&locMap){locMap.removeLayer(locMarker);locMarker=null;}initMap(null,null);},200);
+}
+function openEdit(id){
+  var loc=null;
+  for(var i=0;i<locations.length;i++){if(locations[i].id===id){loc=locations[i];break;}}
+  if(!loc) return;
+  editingId=id;
+  document.getElementById('modal-title').textContent='Düzenle';
+  document.getElementById('f-name').value=loc.name||'';
+  document.getElementById('f-addr').value=loc.addr||'';
+  document.getElementById('f-lat').value=loc.lat||'';
+  document.getElementById('f-lng').value=loc.lng||'';
+  document.getElementById('f-note').value=loc.note||'';
+  var storedM=loc.radiusM||stepToMeters(loc.radius||10);
+  var step=metersToStep(storedM);
+  document.getElementById('f-radius').value=step;
+  document.getElementById('f-rval').textContent=sliderLabel(step);
+  document.getElementById('f-type').value=loc.type||'🏘️';
+  document.getElementById('addr-results').style.display='none';
+  if(loc.lat&&loc.lng) setLocStatus('✅ '+loc.lat.toFixed(5)+', '+loc.lng.toFixed(5),'ok');
+  else setLocStatus('No location — search or use GPS');
+  document.getElementById('codes-list').innerHTML='';
+  var codes=loc.codes||[];
+  for(var i=0;i<codes.length;i++) addCodeRow(codes[i]);
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(function(){initMap(loc.lat||null,loc.lng||null);},200);
+}
+function closeModal(){
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.getElementById('addr-results').style.display='none';
+}
+function handleOverlayClick(e){if(e.target===document.getElementById('modal-overlay'))closeModal();}
+
+function addCodeRow(data){
+  data=data||{};
+  var row=document.createElement('div');
+  row.className='code-row';
+  row.innerHTML='<div style="flex:1;display:flex;flex-direction:column;gap:6px">'+
+    '<input type="text" class="finput ccode" placeholder="Code (e.g. 1234#)" value="'+esc(data.code||'')+'">'+
+    '<input type="text" class="finput" placeholder="Label (Main Gate, Building A...)" style="font-size:13px;padding:7px 10px" value="'+esc(data.label||'')+'">'+
+    '</div><button class="code-row-del" onclick="this.parentElement.remove()">✕</button>';
+  document.getElementById('codes-list').appendChild(row);
+}
+
+function saveLocation(){
+  var name=document.getElementById('f-name').value.trim();
+  if(!name){toast('❗ Yer adı gerekli');return;}
+  var codes=[];
+  var rows=document.querySelectorAll('#codes-list .code-row');
+  for(var i=0;i<rows.length;i++){
+    var ins=rows[i].querySelectorAll('input');
+    var code=ins[0].value.trim(), label=ins[1].value.trim();
+    if(code) codes.push({code:code,label:label});
+  }
+  if(!codes.length){toast('❗ En az bir kod gir');return;}
+  var step=parseInt(document.getElementById('f-radius').value)||10;
+  var loc={
+    id:editingId||uid(), name:name,
+    addr:document.getElementById('f-addr').value.trim(),
+    lat:parseFloat(document.getElementById('f-lat').value)||null,
+    lng:parseFloat(document.getElementById('f-lng').value)||null,
+    radiusM:stepToMeters(step),
+    type:document.getElementById('f-type').value,
+    note:document.getElementById('f-note').value.trim(),
+    codes:codes, updatedAt:Date.now()
+  };
+  if(editingId){
+    for(var i=0;i<locations.length;i++){if(locations[i].id===editingId){locations[i]=loc;break;}}
+  } else {
+    locations.push(loc);
+  }
+  save(); render(nearbyIds); closeModal();
+  toast(editingId?'✅ Güncellendi':'✅ Kaydedildi');
+}
+function deleteLocation(id){
+  if(!confirm('Bu kaydı silmek istediğine emin misin?')) return;
+  locations=locations.filter(function(l){return l.id!==id;});
+  save(); render(nearbyIds); toast('🗑 Silindi');
+}
+
+// ── SETTINGS ───────────────────────────────────────────────
+function toggleSetting(key,btn){
+  settings[key]=!settings[key];
+  btn.classList.toggle('on',settings[key]);
+  save();
+}
+function setUnit(u){
+  settings.unit=u;
+  document.getElementById('unit-btn-imperial').classList.toggle('active',u==='imperial');
+  document.getElementById('unit-btn-metric').classList.toggle('active',u==='metric');
+  updateDefaultRadius(document.getElementById('default-radius-slider').value);
+  var fStep=document.getElementById('f-radius').value;
+  if(fStep) document.getElementById('f-rval').textContent=sliderLabel(parseInt(fStep));
+  save(); render(nearbyIds);
+}
+function updateDefaultRadius(v){
+  settings.defaultRadius=parseInt(v);
+  document.getElementById('default-radius-label').textContent=sliderLabel(parseInt(v));
+  save();
+}
+function applySettings(){
+  document.getElementById('toggle-autoscan').classList.toggle('on',settings.autoscan);
+  document.getElementById('unit-btn-imperial').classList.toggle('active',settings.unit==='imperial');
+  document.getElementById('unit-btn-metric').classList.toggle('active',settings.unit==='metric');
+  var dr=settings.defaultRadius||10;
+  document.getElementById('default-radius-slider').value=dr;
+  document.getElementById('default-radius-label').textContent=sliderLabel(dr);
+}
+
+// ── EXPORT / IMPORT ────────────────────────────────────────
+function exportData(){
+  var blob=new Blob([JSON.stringify({locations:locations,settings:settings,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='kapi-kodlari-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  toast('📤 Dışa aktarıldı');
+}
+function importData(){ document.getElementById('import-input').click(); }
+function handleImport(e){
+  var file=e.target.files[0]; if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      var d=JSON.parse(ev.target.result);
+      if(!d.locations) throw new Error();
+      if(!confirm(d.locations.length+' kayıt içe aktarılacak. Devam?')) return;
+      var ex={};
+      locations.forEach(function(l){ex[l.id]=true;});
+      d.locations.forEach(function(l){if(!ex[l.id])locations.push(l);});
+      save(); render(); toast('✅ İçe aktarıldı');
+    }catch(err){ toast('❌ Geçersiz dosya'); }
+  };
+  reader.readAsText(file);
+  e.target.value='';
+}
+function clearAll(){ locations=[]; save(); render(); toast('🗑 Silindi'); }
+
+// ── INIT ───────────────────────────────────────────────────
+load();
+applySettings();
+render();
+if(settings.autoscan){
+  setTimeout(function(){scanNearby(true);},800);
+}
+</script>
+</body>
+</html>
