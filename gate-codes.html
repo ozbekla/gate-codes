@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="KapÄ± KodlarÄ±">
-<title>KapÄ± KodlarÄ±</title>
+<meta name="apple-mobile-web-app-title" content="Kapı Kodları">
+<title>Kapı Kodları</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -176,17 +176,17 @@
 
 <div class="header">
   <div>
-    <div class="header-title">ðŸ”‘ KapÄ± KodlarÄ±</div>
-    <div class="header-subtitle" id="header-sub">0 kayÄ±tlÄ± yer</div>
+    <div class="header-title">🔑 Kapı Kodları</div>
+    <div class="header-subtitle" id="header-sub">0 kayıtlı yer</div>
   </div>
-  <button class="scan-btn" onclick="scanNearby()">ðŸ“¡ Tara</button>
+  <button class="scan-btn" onclick="scanNearby()">📡 Tara</button>
 </div>
 
 <div id="nearby-banner"></div>
 
 <div class="tabs">
   <button class="tab active" onclick="showTab('locations')">Yerler</button>
-  <button class="tab" onclick="showTab('map')">ðŸ—º Harita</button>
+  <button class="tab" onclick="showTab('map')">🗺 Harita</button>
   <button class="tab" onclick="showTab('settings')">Ayarlar</button>
 </div>
 
@@ -195,13 +195,13 @@
 <!-- MAP TAB -->
 <div id="tab-map">
   <div id="main-map"></div>
-  <button class="map-my-loc-btn" onclick="centerMyLocation()" title="Konumuma git">ðŸ“</button>
+  <button class="map-my-loc-btn" onclick="centerMyLocation()" title="Konumuma git">📍</button>
 </div>
 
 <div class="content" id="tab-settings" style="display:none">
   <div class="settings-section">
     <div class="settings-row">
-      <div><div class="settings-row-label">Otomatik Tarama</div><div class="settings-row-sub">AÃ§Ä±lÄ±ÅŸta yakÄ±n yerleri gÃ¶ster</div></div>
+      <div><div class="settings-row-label">Otomatik Tarama</div><div class="settings-row-sub">Açılışta yakın yerleri göster</div></div>
       <button class="toggle on" id="toggle-autoscan" onclick="toggleSetting('autoscan',this)"></button>
     </div>
     <div class="settings-row">
@@ -213,29 +213,29 @@
     </div>
     <div class="settings-row">
       <div style="flex:1">
-        <div class="settings-row-label">VarsayÄ±lan Mesafe: <span id="default-radius-label" style="color:var(--accent);font-family:var(--mono)">300 ft</span></div>
-        <div class="settings-row-sub">Yeni kayÄ±tlarda Ã¶nerilen eÅŸik</div>
+        <div class="settings-row-label">Varsayılan Mesafe: <span id="default-radius-label" style="color:var(--accent);font-family:var(--mono)">300 ft</span></div>
+        <div class="settings-row-sub">Yeni kayıtlarda önerilen eşik</div>
         <input type="range" class="rslider" min="1" max="20" step="1" id="default-radius-slider" value="10" oninput="updateDefaultRadius(this.value)" style="margin-top:8px;width:100%">
       </div>
     </div>
   </div>
   <div class="settings-section">
     <div class="settings-row" onclick="exportData()" style="cursor:pointer">
-      <div><div class="settings-row-label">Verileri DÄ±ÅŸa Aktar</div><div class="settings-row-sub">JSON yedek al</div></div>
-      <span style="color:var(--text3)">â†’</span>
+      <div><div class="settings-row-label">Verileri Dışa Aktar</div><div class="settings-row-sub">JSON yedek al</div></div>
+      <span style="color:var(--text3)">→</span>
     </div>
     <div class="settings-row" onclick="importData()" style="cursor:pointer">
-      <div><div class="settings-row-label">Verileri Ä°Ã§e Aktar</div><div class="settings-row-sub">JSON dosyasÄ±ndan yÃ¼kle</div></div>
-      <span style="color:var(--text3)">â†’</span>
+      <div><div class="settings-row-label">Verileri İçe Aktar</div><div class="settings-row-sub">JSON dosyasından yükle</div></div>
+      <span style="color:var(--text3)">→</span>
     </div>
   </div>
   <div class="settings-section">
-    <div class="settings-row" onclick="if(confirm('TÃ¼m veriler silinecek!'))clearAll()" style="cursor:pointer">
-      <div><div class="settings-row-label" style="color:var(--warn)">TÃ¼m Verileri Sil</div></div>
-      <span>âš ï¸</span>
+    <div class="settings-row" onclick="if(confirm('Tüm veriler silinecek!'))clearAll()" style="cursor:pointer">
+      <div><div class="settings-row-label" style="color:var(--warn)">Tüm Verileri Sil</div></div>
+      <span>⚠️</span>
     </div>
   </div>
-  <div style="text-align:center;padding:20px 0;color:var(--text3);font-size:12px;font-family:var(--mono)">v1.4.0 Â· ozbekla.github.io</div>
+  <div style="text-align:center;padding:20px 0;color:var(--text3);font-size:12px;font-family:var(--mono)">v1.4.0 · ozbekla.github.io</div>
 </div>
 
 <button class="fab" onclick="openAdd()">+</button>
@@ -248,43 +248,43 @@
 
     <!-- ADDRESS FIRST -->
     <div class="fsec">
-      <label class="flabel">Adres Ara (US) â€” Yer adÄ± otomatik dolar</label>
+      <label class="flabel">Adres Ara (US) — Yer adı otomatik dolar</label>
       <div class="addr-row">
         <input type="text" class="finput" id="f-addr" placeholder="123 Main St, Austin TX..." onkeydown="if(event.key==='Enter'){event.preventDefault();searchAddress()}">
-        <button class="addr-search-btn" onclick="searchAddress()">ðŸ”</button>
+        <button class="addr-search-btn" onclick="searchAddress()">🔍</button>
       </div>
       <div class="addr-results" id="addr-results"></div>
     </div>
 
     <!-- NAME (auto-filled, editable) -->
     <div class="fsec">
-      <label class="flabel">Yer AdÄ± * <span style="color:var(--text3);font-size:10px;text-transform:none;letter-spacing:0">(adres seÃ§ince otomatik dolar, deÄŸiÅŸtirebilirsin)</span></label>
+      <label class="flabel">Yer Adı * <span style="color:var(--text3);font-size:10px;text-transform:none;letter-spacing:0">(adres seçince otomatik dolar, değiştirebilirsin)</span></label>
       <input type="text" class="finput" id="f-name" placeholder="Maple Grove Apt, Building A...">
     </div>
 
     <div class="fsec">
       <label class="flabel">Kategori</label>
       <select class="fselect" id="f-type">
-        <option value="ðŸ˜ï¸">ðŸ˜ï¸ Apartment Complex</option>
-        <option value="ðŸ¢">ðŸ¢ Office / Business</option>
-        <option value="ðŸ ">ðŸ  House / Villa</option>
-        <option value="ðŸ—ï¸">ðŸ—ï¸ Building / Block</option>
-        <option value="ðŸšª">ðŸšª Main Gate</option>
-        <option value="ðŸ…¿ï¸">ðŸ…¿ï¸ Parking Garage</option>
-        <option value="ðŸ“¦">ðŸ“¦ Warehouse / Depot</option>
-        <option value="â­">â­ Other</option>
+        <option value="🏘️">🏘️ Apartment Complex</option>
+        <option value="🏢">🏢 Office / Business</option>
+        <option value="🏠">🏠 House / Villa</option>
+        <option value="🏗️">🏗️ Building / Block</option>
+        <option value="🚪">🚪 Main Gate</option>
+        <option value="🅿️">🅿️ Parking Garage</option>
+        <option value="📦">📦 Warehouse / Depot</option>
+        <option value="⭐">⭐ Other</option>
       </select>
     </div>
 
     <div class="map-wrap">
       <div id="loc-map"></div>
-      <div class="map-hint">ðŸ“Œ Tap map or drag pin to adjust</div>
+      <div class="map-hint">📌 Tap map or drag pin to adjust</div>
     </div>
 
     <div class="fsec">
       <div class="gps-row">
-        <button class="gps-btn primary" onclick="getGPS()">ðŸ“ GPS'ten Al</button>
-        <button class="gps-btn" onclick="clearLocation()">âœ• Konumu Sil</button>
+        <button class="gps-btn primary" onclick="getGPS()">📍 GPS'ten Al</button>
+        <button class="gps-btn" onclick="clearLocation()">✕ Konumu Sil</button>
       </div>
       <div class="loc-status" id="loc-status">Adres ara veya GPS al</div>
     </div>
@@ -292,7 +292,7 @@
     <input type="hidden" id="f-lng">
 
     <div class="fsec">
-      <label class="flabel">YakÄ±nlÄ±k EÅŸiÄŸi</label>
+      <label class="flabel">Yakınlık Eşiği</label>
       <div class="radius-wrap">
         <input type="range" class="rslider" min="1" max="20" step="1" id="f-radius" value="10" oninput="updateRadiusLabel(this.value)">
         <span class="rval" id="f-rval">300 ft</span>
@@ -311,7 +311,7 @@
     </div>
 
     <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeModal()">Ä°ptal</button>
+      <button class="btn-cancel" onclick="closeModal()">İptal</button>
       <button class="btn-save" onclick="saveLocation()">Kaydet</button>
     </div>
   </div>
@@ -319,22 +319,22 @@
 
 <div id="scan-overlay">
   <div class="scan-ring"></div>
-  <div style="font-size:18px;font-weight:600">Konum AlÄ±nÄ±yor</div>
-  <div style="font-size:13px;color:var(--text3);line-height:1.6;margin-top:4px">GPS alÄ±nÄ±yor, yakÄ±n yerler aranÄ±yor...</div>
-  <button class="scan-cancel" onclick="cancelScan()">Ä°ptal</button>
+  <div style="font-size:18px;font-weight:600">Konum Alınıyor</div>
+  <div style="font-size:13px;color:var(--text3);line-height:1.6;margin-top:4px">GPS alınıyor, yakın yerler aranıyor...</div>
+  <button class="scan-cancel" onclick="cancelScan()">İptal</button>
 </div>
 
 <div class="toast" id="toast"></div>
 <input type="file" id="import-input" accept=".json" style="display:none" onchange="handleImport(event)">
 
 <script>
-// â”€â”€ SAFE STORAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── SAFE STORAGE ───────────────────────────────────────────
 var _mem={};
 var _useLS=(function(){try{localStorage.setItem('_t','1');localStorage.removeItem('_t');return true;}catch(e){return false;}})();
 function storeSet(k,v){try{if(_useLS)localStorage.setItem(k,v);else _mem[k]=v;}catch(e){_mem[k]=v;}}
 function storeGet(k){try{return _useLS?localStorage.getItem(k):(_mem[k]||null);}catch(e){return _mem[k]||null;}}
 
-// â”€â”€ UNITS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── UNITS ──────────────────────────────────────────────────
 var STEP_IMP=9.144, STEP_MET=10;
 function stepToM(s){return settings.unit==='metric'?s*STEP_MET:s*STEP_IMP;}
 function mToStep(m){var d=settings.unit==='metric'?STEP_MET:STEP_IMP;return Math.max(1,Math.min(20,Math.round(m/d)));}
@@ -345,7 +345,7 @@ function fmtDist(m){
 }
 function stepLabel(s){return fmtDist(stepToM(s));}
 
-// â”€â”€ STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── STATE ──────────────────────────────────────────────────
 var locations=[], settings={autoscan:true,defaultRadius:10,unit:'imperial'};
 var editingId=null, scanTimeout=null, nearbyIds=[];
 var locMap=null, locMarker=null;
@@ -362,9 +362,9 @@ function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function distM(a,b,c,d){var R=6371000,dL=(c-a)*Math.PI/180,dN=(d-b)*Math.PI/180,x=Math.sin(dL/2)*Math.sin(dL/2)+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dN/2)*Math.sin(dN/2);return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
 function toast(msg,dur){dur=dur||2200;var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},dur);}
-function copyText(t){if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){toast('ðŸ“‹ '+t);}).catch(function(){toast(t);});}else{toast(t);}}
+function copyText(t){if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){toast('📋 '+t);}).catch(function(){toast(t);});}else{toast(t);}}
 
-// â”€â”€ TABS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── TABS ───────────────────────────────────────────────────
 function showTab(tab){
   document.getElementById('tab-locations').style.display=tab==='locations'?'':'none';
   document.getElementById('tab-map').style.display=tab==='map'?'block':'none';
@@ -376,7 +376,7 @@ function showTab(tab){
   if(tab==='map') initMainMap();
 }
 
-// â”€â”€ MAIN MAP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── MAIN MAP ───────────────────────────────────────────────
 function initMainMap(){
   if(!mainMap){
     mainMap=L.map('main-map',{zoomControl:true,attributionControl:false});
@@ -391,7 +391,7 @@ function initMainMap(){
       var lat=pos.coords.latitude, lng=pos.coords.longitude;
       if(myLocMarker) mainMap.removeLayer(myLocMarker);
       myLocMarker=L.circleMarker([lat,lng],{radius:10,fillColor:'#0099ff',fillOpacity:1,color:'#fff',weight:3}).addTo(mainMap);
-      myLocMarker.bindTooltip('ðŸ“ Sen',{permanent:false,direction:'top'});
+      myLocMarker.bindTooltip('📍 Sen',{permanent:false,direction:'top'});
       // Fit bounds to include my loc and all pins
       fitMapBounds(lat,lng);
     },function(){
@@ -433,7 +433,7 @@ function renderMainMapPins(){
         html+='<div class="popup-code" onclick="copyText(\''+esc(c.code)+'\')">'+esc(c.code)+'</div>';
       }
       html+='</div>';
-      html+='<div class="popup-edit" onclick="openEdit(\''+l.id+'\');closePopups()">âœï¸ DÃ¼zenle</div>';
+      html+='<div class="popup-edit" onclick="openEdit(\''+l.id+'\');closePopups()">✏️ Düzenle</div>';
       pin.bindPopup(html,{maxWidth:240});
     })(loc);
     pin.addTo(mainMap);
@@ -444,23 +444,23 @@ function renderMainMapPins(){
 function closePopups(){if(mainMap)mainMap.closePopup();}
 
 function centerMyLocation(){
-  if(!navigator.geolocation){toast('âŒ Konum desteklenmiyor');return;}
+  if(!navigator.geolocation){toast('❌ Konum desteklenmiyor');return;}
   navigator.geolocation.getCurrentPosition(function(pos){
     var lat=pos.coords.latitude,lng=pos.coords.longitude;
     mainMap.setView([lat,lng],16);
     if(myLocMarker) mainMap.removeLayer(myLocMarker);
     myLocMarker=L.circleMarker([lat,lng],{radius:10,fillColor:'#0099ff',fillOpacity:1,color:'#fff',weight:3}).addTo(mainMap);
-  },function(){toast('âŒ Konum alÄ±namadÄ±');},{enableHighAccuracy:true,timeout:6000});
+  },function(){toast('❌ Konum alınamadı');},{enableHighAccuracy:true,timeout:6000});
 }
 
-// â”€â”€ RENDER LIST â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── RENDER LIST ────────────────────────────────────────────
 function render(nids){
   nids=nids||[];
   nearbyIds=nids;
   var list=document.getElementById('locations-list');
   if(!locations.length){
-    list.innerHTML='<div class="empty"><div class="empty-icon">ðŸ”‘</div><div class="empty-title">HenÃ¼z kayÄ±t yok</div><div class="empty-sub">GittiÄŸin binalara kod eklemek iÃ§in<br>+ butonuna bas</div></div>';
-    document.getElementById('header-sub').textContent='0 kayÄ±tlÄ± yer';
+    list.innerHTML='<div class="empty"><div class="empty-icon">🔑</div><div class="empty-title">Henüz kayıt yok</div><div class="empty-sub">Gittiğin binalara kod eklemek için<br>+ butonuna bas</div></div>';
+    document.getElementById('header-sub').textContent='0 kayıtlı yer';
     if(mainMapReady) renderMainMapPins();
     return;
   }
@@ -471,37 +471,37 @@ function render(nids){
     var rLabel=hasC?fmtDist(loc.radiusM||stepToM(loc.radius||10)):null;
     html+='<div class="loc-card'+(isN?' is-nearby':'')+'" id="card-'+loc.id+'">';
     html+='<div class="loc-card-hdr" onclick="toggleCard(\''+loc.id+'\')">';
-    html+='<div class="loc-icon">'+(loc.type||'ðŸ“')+'</div>';
+    html+='<div class="loc-icon">'+(loc.type||'📍')+'</div>';
     html+='<div class="loc-info"><div class="loc-name">'+esc(loc.name)+'</div>';
     if(loc.addr) html+='<div class="loc-addr">'+esc(loc.addr)+'</div>';
     html+='<div class="loc-meta">';
-    if(isN) html+='<span class="badge badge-nearby">â— Nearby</span>';
+    if(isN) html+='<span class="badge badge-nearby">● Nearby</span>';
     html+='<span class="badge badge-cnt">'+codes.length+' kod</span>';
-    html+=hasC?'<span class="badge badge-cnt">'+rLabel+'</span>':'<span class="badge badge-nocoord">ðŸ“ No location</span>';
-    html+='</div></div><div class="chevron">â–¼</div></div>';
+    html+=hasC?'<span class="badge badge-cnt">'+rLabel+'</span>':'<span class="badge badge-nocoord">📍 No location</span>';
+    html+='</div></div><div class="chevron">▼</div></div>';
     html+='<div class="loc-entries">';
     for(var j=0;j<codes.length;j++){
       var c=codes[j];
       html+='<div class="entry-row"><div style="flex:1">';
       if(c.label) html+='<div class="entry-lbl">'+esc(c.label)+'</div>';
       html+='<div class="entry-code">'+esc(c.code)+'</div></div>';
-      html+='<button class="copy-btn" onclick="copyText(\''+esc(c.code)+'\')">ðŸ“‹</button></div>';
+      html+='<button class="copy-btn" onclick="copyText(\''+esc(c.code)+'\')">📋</button></div>';
     }
-    html+='<div class="entry-actions"><button class="btn-sm" onclick="openEdit(\''+loc.id+'\')">âœï¸ DÃ¼zenle</button><button class="btn-sm danger" onclick="deleteLocation(\''+loc.id+'\')">ðŸ—‘ Sil</button></div>';
+    html+='<div class="entry-actions"><button class="btn-sm" onclick="openEdit(\''+loc.id+'\')">✏️ Düzenle</button><button class="btn-sm danger" onclick="deleteLocation(\''+loc.id+'\')">🗑 Sil</button></div>';
     html+='</div></div>';
   }
   list.innerHTML=html;
-  document.getElementById('header-sub').textContent=locations.length+' kayÄ±tlÄ± yer'+(nids.length?' Â· '+nids.length+' nearby':'');
+  document.getElementById('header-sub').textContent=locations.length+' kayıtlı yer'+(nids.length?' · '+nids.length+' nearby':'');
   if(mainMapReady) renderMainMapPins();
 }
 function toggleCard(id){var c=document.getElementById('card-'+id);if(c)c.classList.toggle('open');}
 
-// â”€â”€ NEARBY BANNER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── NEARBY BANNER ──────────────────────────────────────────
 function showNearbyBanner(nl){
   var b=document.getElementById('nearby-banner');
   if(!nl||!nl.length){b.style.display='none';return;}
   b.style.display='block';
-  var html='<div class="nearby-header"><div class="nearby-dot"></div><div class="nearby-title">BURAYA DAHA Ã–NCE GELDÄ°N!</div></div><div class="nearby-cards">';
+  var html='<div class="nearby-header"><div class="nearby-dot"></div><div class="nearby-title">BURAYA DAHA ÖNCE GELDİN!</div></div><div class="nearby-cards">';
   for(var i=0;i<nl.length;i++){
     var loc=nl[i].loc,d=nl[i].d;
     html+='<div class="nearby-card"><div style="flex:1"><div class="nearby-card-name">'+(loc.type||'')+' '+esc(loc.name)+'</div><div class="nearby-card-dist">'+fmtDist(d)+' away</div></div><div class="nearby-codes">';
@@ -515,11 +515,11 @@ function showNearbyBanner(nl){
   b.innerHTML=html+'</div>';
 }
 
-// â”€â”€ SCAN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── SCAN ───────────────────────────────────────────────────
 function scanNearby(silent){
-  if(!navigator.geolocation){if(!silent)toast('âŒ Konum desteklenmiyor');return;}
+  if(!navigator.geolocation){if(!silent)toast('❌ Konum desteklenmiyor');return;}
   if(!silent)document.getElementById('scan-overlay').classList.add('show');
-  scanTimeout=setTimeout(function(){document.getElementById('scan-overlay').classList.remove('show');if(!silent)toast('â± Konum alÄ±namadÄ±');},10000);
+  scanTimeout=setTimeout(function(){document.getElementById('scan-overlay').classList.remove('show');if(!silent)toast('⏱ Konum alınamadı');},10000);
   navigator.geolocation.getCurrentPosition(function(pos){
     clearTimeout(scanTimeout);
     document.getElementById('scan-overlay').classList.remove('show');
@@ -533,16 +533,16 @@ function scanNearby(silent){
     var ids=nl.map(function(n){return n.loc.id;});
     render(ids);showNearbyBanner(nl);
     ids.forEach(function(id){var c=document.getElementById('card-'+id);if(c&&!c.classList.contains('open'))c.classList.add('open');});
-    if(!silent)toast(ids.length?'ðŸ“ '+ids.length+' yakÄ±n yer!':'ðŸ“ YakÄ±nda kayÄ±t yok');
+    if(!silent)toast(ids.length?'📍 '+ids.length+' yakın yer!':'📍 Yakında kayıt yok');
   },function(err){
     clearTimeout(scanTimeout);
     document.getElementById('scan-overlay').classList.remove('show');
-    if(!silent){if(err.code===1)toast('âŒ Location permission â†’ Settingsâ†’Safariâ†’Location');else toast('âŒ Location unavailable');}
+    if(!silent){if(err.code===1)toast('❌ Location permission → Settings→Safari→Location');else toast('❌ Location unavailable');}
   },{enableHighAccuracy:true,timeout:9000});
 }
 function cancelScan(){clearTimeout(scanTimeout);document.getElementById('scan-overlay').classList.remove('show');}
 
-// â”€â”€ FORM MAP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── FORM MAP ───────────────────────────────────────────────
 function makeIcon(){return L.divIcon({html:'<div style="width:26px;height:26px;background:#00e5a0;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.6)"></div>',iconSize:[26,26],iconAnchor:[13,26],className:''});}
 function initMap(lat,lng){
   if(!locMap){
@@ -560,19 +560,19 @@ function initMap(lat,lng){
 }
 function placePin(lat,lng){
   document.getElementById('f-lat').value=lat;document.getElementById('f-lng').value=lng;
-  setLocStatus('ðŸ“Œ '+lat.toFixed(5)+', '+lng.toFixed(5),'ok');
+  setLocStatus('📌 '+lat.toFixed(5)+', '+lng.toFixed(5),'ok');
   if(locMarker)locMap.removeLayer(locMarker);
   locMarker=L.marker([lat,lng],{icon:makeIcon(),draggable:true}).addTo(locMap);
   locMarker.on('dragend',function(e){var p=e.target.getLatLng();pinUpdated(p.lat,p.lng,'drag');});
 }
-function pinUpdated(lat,lng,src){document.getElementById('f-lat').value=lat;document.getElementById('f-lng').value=lng;setLocStatus('âœ… '+lat.toFixed(5)+', '+lng.toFixed(5)+' ('+src+')','ok');}
+function pinUpdated(lat,lng,src){document.getElementById('f-lat').value=lat;document.getElementById('f-lng').value=lng;setLocStatus('✅ '+lat.toFixed(5)+', '+lng.toFixed(5)+' ('+src+')','ok');}
 function setLocStatus(msg,cls){var el=document.getElementById('loc-status');el.textContent=msg;el.className='loc-status'+(cls?' '+cls:'');}
 
-// â”€â”€ ADDRESS SEARCH â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── ADDRESS SEARCH ─────────────────────────────────────────
 function searchAddress(){
   var q=document.getElementById('f-addr').value.trim();
   if(!q||q.length<3){toast('En az 3 karakter gir');return;}
-  setLocStatus('ðŸ” Searching...');
+  setLocStatus('🔍 Searching...');
   fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q)+'&format=json&limit=6&countrycodes=us&accept-language=en')
     .then(function(r){return r.json();})
     .then(function(data){
@@ -587,9 +587,9 @@ function searchAddress(){
         html+='<div class="addr-result-item" onclick="pickAddr('+d.lat+','+d.lon+',\''+esc(full)+'\')">'+display+'</div>';
       }
       res.innerHTML=html;
-      setLocStatus(data.length+' results â€” pick one');
+      setLocStatus(data.length+' results — pick one');
     })
-    .catch(function(){toast('âŒ Search failed');setLocStatus('Search error');});
+    .catch(function(){toast('❌ Search failed');setLocStatus('Search error');});
 }
 
 function pickAddr(lat,lng,fullName){
@@ -599,7 +599,7 @@ function pickAddr(lat,lng,fullName){
   // Auto-fill address field
   document.getElementById('f-addr').value=short;
   document.getElementById('addr-results').style.display='none';
-  setLocStatus('âœ… '+short,'ok');
+  setLocStatus('✅ '+short,'ok');
   document.getElementById('f-lat').value=lat;
   document.getElementById('f-lng').value=lng;
 
@@ -619,9 +619,9 @@ function pickAddr(lat,lng,fullName){
   }
 }
 
-// â”€â”€ GPS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── GPS ────────────────────────────────────────────────────
 function getGPS(){
-  setLocStatus('â³ Getting GPS...');
+  setLocStatus('⏳ Getting GPS...');
   navigator.geolocation.getCurrentPosition(function(pos){
     var lat=pos.coords.latitude,lng=pos.coords.longitude;
     pinUpdated(lat,lng,'GPS');
@@ -638,8 +638,8 @@ function getGPS(){
         if(!nameEl.value) nameEl.value=parts.slice(0,2).join(',').trim();
       }).catch(function(){});
   },function(err){
-    if(err.code===1){setLocStatus('âŒ Permission denied â†’ Settingsâ†’Safariâ†’Location','err');toast('âŒ Location permission needed');}
-    else setLocStatus('âŒ GPS unavailable','err');
+    if(err.code===1){setLocStatus('❌ Permission denied → Settings→Safari→Location','err');toast('❌ Location permission needed');}
+    else setLocStatus('❌ GPS unavailable','err');
   },{enableHighAccuracy:true,timeout:8000});
 }
 function clearLocation(){
@@ -649,7 +649,7 @@ function clearLocation(){
 }
 function updateRadiusLabel(step){document.getElementById('f-rval').textContent=stepLabel(parseInt(step));}
 
-// â”€â”€ MODAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── MODAL ──────────────────────────────────────────────────
 function openAdd(){
   editingId=null;
   document.getElementById('modal-title').textContent='Yeni Yer Ekle';
@@ -657,7 +657,7 @@ function openAdd(){
   var defStep=settings.defaultRadius||10;
   document.getElementById('f-radius').value=defStep;
   document.getElementById('f-rval').textContent=stepLabel(defStep);
-  document.getElementById('f-type').value='ðŸ˜ï¸';
+  document.getElementById('f-type').value='🏘️';
   setLocStatus('Adres ara veya GPS al');
   document.getElementById('addr-results').style.display='none';
   document.getElementById('codes-list').innerHTML='';
@@ -669,7 +669,7 @@ function openEdit(id){
   var loc=null;for(var i=0;i<locations.length;i++){if(locations[i].id===id){loc=locations[i];break;}}
   if(!loc)return;
   editingId=id;
-  document.getElementById('modal-title').textContent='DÃ¼zenle';
+  document.getElementById('modal-title').textContent='Düzenle';
   document.getElementById('f-name').value=loc.name||'';
   document.getElementById('f-addr').value=loc.addr||'';
   document.getElementById('f-lat').value=loc.lat||'';
@@ -679,10 +679,10 @@ function openEdit(id){
   var step=mToStep(storedM);
   document.getElementById('f-radius').value=step;
   document.getElementById('f-rval').textContent=stepLabel(step);
-  document.getElementById('f-type').value=loc.type||'ðŸ˜ï¸';
+  document.getElementById('f-type').value=loc.type||'🏘️';
   document.getElementById('addr-results').style.display='none';
-  if(loc.lat&&loc.lng)setLocStatus('âœ… '+loc.lat.toFixed(5)+', '+loc.lng.toFixed(5),'ok');
-  else setLocStatus('No location â€” search or use GPS');
+  if(loc.lat&&loc.lng)setLocStatus('✅ '+loc.lat.toFixed(5)+', '+loc.lng.toFixed(5),'ok');
+  else setLocStatus('No location — search or use GPS');
   document.getElementById('codes-list').innerHTML='';
   var codes=loc.codes||[];for(var i=0;i<codes.length;i++)addCodeRow(codes[i]);
   document.getElementById('modal-overlay').classList.add('open');
@@ -697,30 +697,30 @@ function addCodeRow(data){
   row.innerHTML='<div style="flex:1;display:flex;flex-direction:column;gap:6px">'+
     '<input type="text" class="finput ccode" placeholder="Code (e.g. 1234#)" value="'+esc(data.code||'')+'">'+
     '<input type="text" class="finput" placeholder="Label (Main Gate, Building A...)" style="font-size:13px;padding:7px 10px" value="'+esc(data.label||'')+'">'+
-    '</div><button class="code-row-del" onclick="this.parentElement.remove()">âœ•</button>';
+    '</div><button class="code-row-del" onclick="this.parentElement.remove()">✕</button>';
   document.getElementById('codes-list').appendChild(row);
 }
 
 function saveLocation(){
   var name=document.getElementById('f-name').value.trim();
-  if(!name){toast('â— Yer adÄ± gerekli');return;}
+  if(!name){toast('❗ Yer adı gerekli');return;}
   var codes=[];
   var rows=document.querySelectorAll('#codes-list .code-row');
   for(var i=0;i<rows.length;i++){var ins=rows[i].querySelectorAll('input');var code=ins[0].value.trim(),label=ins[1].value.trim();if(code)codes.push({code:code,label:label});}
-  if(!codes.length){toast('â— En az bir kod gir');return;}
+  if(!codes.length){toast('❗ En az bir kod gir');return;}
   var step=parseInt(document.getElementById('f-radius').value)||10;
   var loc={id:editingId||uid(),name:name,addr:document.getElementById('f-addr').value.trim(),lat:parseFloat(document.getElementById('f-lat').value)||null,lng:parseFloat(document.getElementById('f-lng').value)||null,radiusM:stepToM(step),type:document.getElementById('f-type').value,note:document.getElementById('f-note').value.trim(),codes:codes,updatedAt:Date.now()};
   if(editingId){for(var i=0;i<locations.length;i++){if(locations[i].id===editingId){locations[i]=loc;break;}}}
   else locations.push(loc);
-  save();render(nearbyIds);closeModal();toast(editingId?'âœ… GÃ¼ncellendi':'âœ… Kaydedildi');
+  save();render(nearbyIds);closeModal();toast(editingId?'✅ Güncellendi':'✅ Kaydedildi');
 }
 function deleteLocation(id){
-  if(!confirm('Bu kaydÄ± silmek istediÄŸine emin misin?'))return;
+  if(!confirm('Bu kaydı silmek istediğine emin misin?'))return;
   locations=locations.filter(function(l){return l.id!==id;});
-  save();render(nearbyIds);toast('ðŸ—‘ Silindi');
+  save();render(nearbyIds);toast('🗑 Silindi');
 }
 
-// â”€â”€ SETTINGS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── SETTINGS ───────────────────────────────────────────────
 function toggleSetting(key,btn){settings[key]=!settings[key];btn.classList.toggle('on',settings[key]);save();}
 function setUnit(u){
   settings.unit=u;
@@ -740,19 +740,19 @@ function applySettings(){
   document.getElementById('default-radius-slider').value=dr;
   document.getElementById('default-radius-label').textContent=stepLabel(dr);
 }
-function exportData(){var blob=new Blob([JSON.stringify({locations:locations,settings:settings,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='kapi-kodlari-'+new Date().toISOString().slice(0,10)+'.json';a.click();toast('ðŸ“¤ DÄ±ÅŸa aktarÄ±ldÄ±');}
+function exportData(){var blob=new Blob([JSON.stringify({locations:locations,settings:settings,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='kapi-kodlari-'+new Date().toISOString().slice(0,10)+'.json';a.click();toast('📤 Dışa aktarıldı');}
 function importData(){document.getElementById('import-input').click();}
 function handleImport(e){
   var file=e.target.files[0];if(!file)return;
   var reader=new FileReader();
   reader.onload=function(ev){
-    try{var d=JSON.parse(ev.target.result);if(!d.locations)throw 0;if(!confirm(d.locations.length+' kayÄ±t iÃ§e aktarÄ±lacak. Devam?'))return;var ex={};locations.forEach(function(l){ex[l.id]=true;});d.locations.forEach(function(l){if(!ex[l.id])locations.push(l);});save();render();toast('âœ… Ä°Ã§e aktarÄ±ldÄ±');}
-    catch(err){toast('âŒ GeÃ§ersiz dosya');}
+    try{var d=JSON.parse(ev.target.result);if(!d.locations)throw 0;if(!confirm(d.locations.length+' kayıt içe aktarılacak. Devam?'))return;var ex={};locations.forEach(function(l){ex[l.id]=true;});d.locations.forEach(function(l){if(!ex[l.id])locations.push(l);});save();render();toast('✅ İçe aktarıldı');}
+    catch(err){toast('❌ Geçersiz dosya');}
   };reader.readAsText(file);e.target.value='';
 }
-function clearAll(){locations=[];save();render();toast('ðŸ—‘ Silindi');}
+function clearAll(){locations=[];save();render();toast('🗑 Silindi');}
 
-// â”€â”€ INIT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── INIT ───────────────────────────────────────────────────
 load();applySettings();render();
 if(settings.autoscan)setTimeout(function(){scanNearby(true);},800);
 </script>
