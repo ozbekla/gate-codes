@@ -94,6 +94,15 @@
   .fab{position:fixed;bottom:calc(var(--navh) + 20px + env(safe-area-inset-bottom));right:20px;z-index:200;width:58px;height:58px;border-radius:20px;background:var(--accent);border:none;color:#000;font-size:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 24px #00e5a040;}
   .fab:active{transform:scale(.93);}
 
+  /* FİLTRE (Hepsi / Kapı / Tuvalet) */
+  .filters{display:flex;gap:8px;margin:10px 16px 0;}
+  .filters button{flex:1;padding:8px 0;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;}
+  .filters button.active{background:var(--text);color:var(--bg);border-color:var(--text);font-weight:600;}
+  .loc-card.is-wc .loc-icon{background:#4da3ff22;box-shadow:inset 0 0 0 1px #4da3ff66;}
+  .badge-wc{background:#4da3ff1f;color:#4da3ff;border:1px solid #4da3ff55;}
+  #tab-map .map-legend{position:absolute;top:10px;left:10px;z-index:500;display:flex;gap:10px;background:rgba(19,19,26,.9);border:1px solid var(--border);border-radius:10px;padding:6px 10px;font-size:11px;color:var(--text2);}
+  .map-legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+
   /* BOTTOM NAV */
   .bnav{position:fixed;left:0;right:0;bottom:0;z-index:250;display:flex;background:rgba(19,19,26,.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:6px 8px calc(6px + env(safe-area-inset-bottom));}
   .bnav button{flex:1;background:none;border:none;color:var(--text3);font-family:var(--sans);font-size:11px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;cursor:pointer;}
@@ -258,9 +267,15 @@
     <button class="tab active" onclick="showTab('locations')">Liste</button>
     <button class="tab" onclick="showTab('map')">🗺 Harita</button>
   </div>
+  <div class="filters" id="code-filters">
+    <button data-f="all" onclick="setCodeFilter('all')">Hepsi</button>
+    <button data-f="gate" onclick="setCodeFilter('gate')">🔑 Kapı</button>
+    <button data-f="wc" onclick="setCodeFilter('wc')">🚻 Tuvalet</button>
+  </div>
   <div class="content" id="tab-locations"><div id="locations-list"></div></div>
   <div id="tab-map">
     <div id="main-map"></div>
+    <div class="map-legend"><span><i style="background:#ff6b35"></i>Kapı</span><span><i style="background:#4da3ff"></i>Tuvalet</span><span><i style="background:#00e5a0"></i>Yakında</span></div>
     <button class="map-my-loc-btn" onclick="centerMyLocation()" title="Konumuma git">📍</button>
   </div>
 </div>
@@ -340,7 +355,7 @@
       <span>⚠️</span>
     </div>
   </div>
-  <div style="text-align:center;padding:20px 0;color:var(--text3);font-size:12px;font-family:var(--mono)">v2.0.0 · ozbekla.github.io</div>
+  <div style="text-align:center;padding:20px 0;color:var(--text3);font-size:12px;font-family:var(--mono)">v2.1.0 · ozbekla.github.io</div>
 </div>
 </div>
 
@@ -384,6 +399,7 @@
         <option value="🚪">🚪 Main Gate</option>
         <option value="🅿️">🅿️ Parking Garage</option>
         <option value="📦">📦 Warehouse / Depot</option>
+        <option value="🚻">🚻 Restroom (Tuvalet)</option>
         <option value="⭐">⭐ Other</option>
       </select>
     </div>
@@ -479,6 +495,12 @@ function load(){
   }catch(e){locations=[];}
 }
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+// ── TUVALET / KAPI FİLTRESİ ────────────────────────────────
+function isWC(l){return l.type==='🚻';}
+function codeFilter(){return settings.codeFilter||'all';}
+function passFilter(l){var f=codeFilter();return f==='all'||(f==='wc'?isWC(l):!isWC(l));}
+function setCodeFilter(f){settings.codeFilter=f;save();applyCodeFilterUI();render(nearbyIds);if(mainMap)fitMapBounds(lastPos&&lastPos.lat,lastPos&&lastPos.lng);}
+function applyCodeFilterUI(){document.querySelectorAll('#code-filters button').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-f')===codeFilter());});}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function distM(a,b,c,d){var R=6371000,dL=(c-a)*Math.PI/180,dN=(d-b)*Math.PI/180,x=Math.sin(dL/2)*Math.sin(dL/2)+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dN/2)*Math.sin(dN/2);return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
 function toast(msg,dur){dur=dur||2200;var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(function(){t.classList.remove('show');},dur);}
@@ -544,7 +566,7 @@ function initMainMap(){
 function fitMapBounds(myLat,myLng){
   var pts=[];
   if(myLat&&myLng) pts.push([myLat,myLng]);
-  for(var i=0;i<locations.length;i++){if(locations[i].lat&&locations[i].lng) pts.push([locations[i].lat,locations[i].lng]);}
+  for(var i=0;i<locations.length;i++){if(locations[i].lat&&locations[i].lng&&passFilter(locations[i])) pts.push([locations[i].lat,locations[i].lng]);}
   if(pts.length>1){ mainMap.fitBounds(pts,{padding:[40,40],maxZoom:16}); }
   else if(pts.length===1){ mainMap.setView(pts[0],15); }
   else{ mainMap.setView([37.09,-95.71],4); }
@@ -556,9 +578,9 @@ function renderMainMapPins(){
   locPins=[];
   for(var i=0;i<locations.length;i++){
     var loc=locations[i];
-    if(!loc.lat||!loc.lng) continue;
+    if(!loc.lat||!loc.lng||!passFilter(loc)) continue;
     var isN=nearbyIds.indexOf(loc.id)>=0;
-    var color=isN?'#00e5a0':'#ff6b35';
+    var color=isN?'#00e5a0':(isWC(loc)?'#4da3ff':'#ff6b35');
     var pin=L.circleMarker([loc.lat,loc.lng],{radius:12,fillColor:color,fillOpacity:0.9,color:'#fff',weight:2});
     (function(l){
       var html='<div class="popup-name">'+(l.type||'')+" "+esc(l.name)+'</div>';
@@ -603,18 +625,27 @@ function render(nids){
     if(mainMapReady) renderMainMapPins();
     return;
   }
-  var sorted=locations.slice().sort(function(a,b){var aN=nids.indexOf(a.id)>=0?0:1,bN=nids.indexOf(b.id)>=0?0:1;return aN-bN||(b.updatedAt||0)-(a.updatedAt||0);});
+  var shown=locations.filter(passFilter);
+  var nWC=locations.filter(isWC).length;
+  document.getElementById('header-sub').textContent=(locations.length-nWC)+' kapı · '+nWC+' tuvalet'+(nids.length?' · '+nids.length+' nearby':'');
+  if(!shown.length){
+    list.innerHTML='<div class="empty"><div class="empty-icon">'+(codeFilter()==='wc'?'🚻':'🔑')+'</div><div class="empty-title">'+(codeFilter()==='wc'?'Henüz tuvalet kodu yok':'Henüz kapı kodu yok')+'</div><div class="empty-sub">+ butonuna bas, '+(codeFilter()==='wc'?'Kategori’den <b>🚻 Restroom</b> seç':'kodu ekle')+'</div></div>';
+    if(mainMapReady) renderMainMapPins();
+    return;
+  }
+  var sorted=shown.sort(function(a,b){var aN=nids.indexOf(a.id)>=0?0:1,bN=nids.indexOf(b.id)>=0?0:1;return aN-bN||(b.updatedAt||0)-(a.updatedAt||0);});
   var html='';
   for(var i=0;i<sorted.length;i++){
     var loc=sorted[i],isN=nids.indexOf(loc.id)>=0,codes=loc.codes||[],hasC=loc.lat&&loc.lng;
     var rLabel=hasC?fmtDist(loc.radiusM||stepToM(loc.radius||10)):null;
-    html+='<div class="loc-card'+(isN?' is-nearby':'')+'" id="card-'+loc.id+'">';
+    html+='<div class="loc-card'+(isN?' is-nearby':'')+(isWC(loc)?' is-wc':'')+'" id="card-'+loc.id+'">';
     html+='<div class="loc-card-hdr" onclick="toggleCard(\''+loc.id+'\')">';
     html+='<div class="loc-icon">'+(loc.type||'📍')+'</div>';
     html+='<div class="loc-info"><div class="loc-name">'+esc(loc.name)+'</div>';
     if(loc.addr) html+='<div class="loc-addr">'+esc(loc.addr)+'</div>';
     html+='<div class="loc-meta">';
     if(isN) html+='<span class="badge badge-nearby">● Nearby</span>';
+    if(isWC(loc)) html+='<span class="badge badge-wc">Tuvalet</span>';
     html+='<span class="badge badge-cnt">'+codes.length+' kod</span>';
     html+=hasC?'<span class="badge badge-cnt">'+rLabel+'</span>':'<span class="badge badge-nocoord">📍 No location</span>';
     html+='</div></div><div class="chevron">▼</div></div>';
@@ -631,7 +662,6 @@ function render(nids){
     html+='</div></div>';
   }
   list.innerHTML=html;
-  document.getElementById('header-sub').textContent=locations.length+' kayıtlı yer'+(nids.length?' · '+nids.length+' nearby':'');
   if(mainMapReady) renderMainMapPins();
 }
 function toggleCard(id){var c=document.getElementById('card-'+id);if(c)c.classList.toggle('open');}
@@ -793,7 +823,7 @@ function openAdd(){
   var defStep=settings.defaultRadius||10;
   document.getElementById('f-radius').value=defStep;
   document.getElementById('f-rval').textContent=stepLabel(defStep);
-  document.getElementById('f-type').value='🏘️';
+  document.getElementById('f-type').value=codeFilter()==='wc'?'🚻':'🏘️';
   setLocStatus('Adres ara veya GPS al');
   document.getElementById('addr-results').style.display='none';
   document.getElementById('codes-list').innerHTML='';
@@ -1336,7 +1366,7 @@ function yReplace(){
 }
 
 // ── INIT ───────────────────────────────────────────────────
-load();applySettings();render();
+load();applySettings();applyCodeFilterUI();render();
 yLoad();yApplySettings();
 yOpenIdb().then(function(db){yIdb=db;if(curSec==='places')yRender();});
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(function(){});
