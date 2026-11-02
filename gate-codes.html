@@ -104,6 +104,8 @@
   .map-legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
 
   .kind-toggle{display:flex;gap:8px;}
+  .add-code-btn.paste-open{border-style:solid;border-color:#0099ff66;color:#4da3ff;background:#0099ff10;font-weight:600;}
+  #paste-box{margin-top:8px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);}
   .kind-toggle button{flex:1;padding:14px 6px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-family:var(--sans);font-size:15px;font-weight:600;cursor:pointer;}
   .kind-toggle button[data-k="gate"].active{border-color:var(--accent);color:var(--accent);background:#00e5a014;}
   .kind-toggle button[data-k="wc"].active{border-color:#4da3ff;color:#4da3ff;background:#4da3ff14;}
@@ -389,7 +391,7 @@
       <span>⚠️</span>
     </div>
   </div>
-  <div style="text-align:center;padding:20px 0;color:var(--text3);font-size:12px;font-family:var(--mono)">v2.3.1 · ozbekla.github.io</div>
+  <div style="text-align:center;padding:20px 0;color:var(--text3);font-size:12px;font-family:var(--mono)">v2.4.0 · ozbekla.github.io</div>
 </div>
 </div>
 
@@ -473,6 +475,13 @@
       <label class="flabel">Kodlar *</label>
       <div class="codes-list" id="codes-list"></div>
       <button class="add-code-btn" onclick="addCodeRow()">+ Kod Ekle</button>
+      <button class="add-code-btn paste-open" onclick="togglePasteBox()">📋 Kopyaladığın metni yapıştır, kodları ayıklasın</button>
+      <div id="paste-box" hidden>
+        <textarea class="ftextarea" id="f-paste" style="min-height:90px" placeholder="Ekran görüntüsünden ya da mesajdan kopyaladığın metnin tamamını buraya yapıştır…"></textarea>
+        <label class="y-check" style="margin-top:8px"><input type="checkbox" id="f-paste-note" checked style="accent-color:#00e5a0"><span>Metnin temiz halini Not’a da ekle</span></label>
+        <button class="gps-btn primary" style="width:100%;margin-top:8px" onclick="runExtract()">✨ Kodları ayıkla</button>
+        <div class="loc-status" id="paste-status"></div>
+      </div>
     </div>
 
     <div class="fsec">
@@ -880,6 +889,7 @@ function openAdd(){
   setLocStatus('Adres ara veya GPS al');
   document.getElementById('addr-results').style.display='none';
   document.getElementById('codes-list').innerHTML='';
+  document.getElementById('paste-box').hidden=true;
   addCodeRow();
   document.getElementById('modal-overlay').classList.add('open');
   document.querySelector('#modal-overlay .modal').scrollTop=0;
@@ -942,6 +952,87 @@ function deleteLocation(id){
   locations=locations.filter(function(l){return l.id!==id;});
   save();render(nearbyIds);toast('🗑 Silindi');
 }
+
+
+// ── AKILLI YAPIŞTIRMA: metinden kodları ayıkla ─────────────
+function cleanPasted(t){
+  t=String(t||'');
+  if(/%[0-9A-Fa-f]{2}/.test(t)){
+    try{t=decodeURIComponent(t.replace(/\+/g,' '));}
+    catch(e){t=t.replace(/%([0-9A-Fa-f]{2})/g,function(m,h){var c=parseInt(h,16);return c>=32&&c<127?String.fromCharCode(c):' ';});}
+  }
+  t=t.replace(/&#(\d+);/g,function(m,n){return String.fromCharCode(+n);}).replace(/&amp;/g,'&').replace(/&nbsp;/g,' ').replace(/&quot;/g,'"').replace(/&#39;|&apos;/g,"'");
+  t=t.replace(/[​-‏‪-‮⁠-⁤﻿­￼�]/g,'').replace(/[   \t]/g,' ');
+  t=t.replace(/[０-９]/g,function(c){return String.fromCharCode(c.charCodeAt(0)-0xFF10+48);}).replace(/[＃♯]/g,'#').replace(/[＊∗✱]/g,'*');
+  t=t.replace(/[ ]{2,}/g,' ').replace(/\n{3,}/g,'\n\n').trim();
+  return t;
+}
+var CODE_LABELS=[[/call\s*-?\s*box|callbox|intercom|buzz/i,'Call box'],[/main\s+gate|front\s+gate/i,'Main gate'],[/(pedestrian|walk)(\s+gate)?/i,'Pedestrian gate'],[/(garage|parking)(\s+gate|\s+door)?/i,'Garage'],[/gate/i,'Gate'],[/lobby/i,'Lobby'],[/elevator/i,'Elevator'],[/mail|package|parcel|locker/i,'Mail / locker'],[/pool/i,'Pool'],[/building|bldg/i,'Building'],[/door|entry|entrance/i,'Door'],[/key\s*box|lock\s*box|lockbox/i,'Lockbox']];
+var STREET_RE=/^\s*[A-Za-z0-9 .']{0,25}\b(st|street|ave|avenue|dr|drive|rd|road|blvd|boulevard|ln|lane|way|ct|court|pl|place|pkwy|parkway|cir|circle|ter|terrace|trl|trail|hwy)\b/i;
+function extractCodes(text){
+  var t=cleanPasted(text),out=[],seen={};
+  t.split(/\r?\n|[;|]/).forEach(function(line){
+    var re=/(?:[#*]\s?)?\d{3,8}(?:\s?[#*])?/g,m,prevEnd=0;
+    while((m=re.exec(line))){
+      var raw=m[0],start=m.index,end=start+raw.length;
+      var code=raw.replace(/\s/g,'');
+      var before=line.slice(Math.max(0,start-30),start),after=line.slice(end);
+      if(/\d[\s\-.()]*$/.test(before.slice(-4))&&/[-.()]/.test(before.slice(-3)+'x'))continue;      // telefonun parçası (949-555-…)
+      if(/\d\s*$/.test(before.slice(-2)))continue;                                                   // daha uzun bir sayının parçası
+      if(/^[\-.)]?\s?\d/.test(after)||/^[\-.)]/.test(after))continue;                              // 949-…, (949)
+      if(/\b(apt|apartment|unit|suite|ste|room|rm|space|spc)\.?\s*#?\s*$/i.test(before))continue;  // daire no
+      if(/\b[A-Z]{2}\s*$/.test(before)&&/^\d{5}$/.test(code))continue;                              // CA 92618
+      if(/^\d{5}(-\d{4})?$/.test(code)&&/,\s*$/.test(before))continue;                               // , 92618
+      if(STREET_RE.test(after)&&!/[#*]/.test(code))continue;                                        // 1234 Main St
+      if(/^\s*(am|pm|a\.m|p\.m)\b/i.test(after)||/:\s*$/.test(before)&&/^\d{2}$/.test(code))continue; // saat
+      if(/^\s*(mi|miles|ft|feet|min|mins|minutes|lbs|\$)/i.test(after)||/\$\s*$/.test(before))continue;
+      var lw=line.slice(Math.max(prevEnd,start-30),start),label='',best=-1;prevEnd=end;
+      for(var i=0;i<CODE_LABELS.length;i++){var g=new RegExp(CODE_LABELS[i][0].source,'ig'),mm,last=-1;while((mm=g.exec(lw)))last=mm.index+mm[0].length;if(last>best){best=last;label=CODE_LABELS[i][1];}}
+      var key=code.replace(/[#*]/g,'');
+      if(seen[key])continue;seen[key]=1;
+      out.push({code:code,label:label});
+    }
+  });
+  return out;
+}
+function togglePasteBox(){var b=document.getElementById('paste-box');b.hidden=!b.hidden;if(!b.hidden){document.getElementById('paste-status').textContent='';document.getElementById('f-paste').focus();}}
+function fillCodes(codes){
+  var rows=[].slice.call(document.querySelectorAll('#codes-list .code-row'));
+  var have={};rows.forEach(function(r){var v=r.querySelector('.ccode').value.trim();if(v)have[v.replace(/[#*\s]/g,'')]=1;});
+  var empties=rows.filter(function(r){return !r.querySelector('.ccode').value.trim();});
+  var added=0;
+  codes.forEach(function(c){
+    if(have[c.code.replace(/[#*]/g,'')])return;
+    var row=empties.shift();
+    if(row){var ins=row.querySelectorAll('input');ins[0].value=c.code;if(!ins[1].value)ins[1].value=c.label;}
+    else addCodeRow(c);
+    added++;
+  });
+  return added;
+}
+function runExtract(){
+  var raw=document.getElementById('f-paste').value,st=document.getElementById('paste-status');
+  if(!raw.trim()){st.textContent='Önce metni yapıştır';st.className='loc-status err';return;}
+  var clean=cleanPasted(raw),codes=extractCodes(raw);
+  if(document.getElementById('f-paste-note').checked){var n=document.getElementById('f-note');if(n.value.indexOf(clean)<0)n.value=(n.value?n.value+'\n':'')+clean;}
+  if(!codes.length){st.textContent='Metinde kod bulamadım. Temiz hali Not’a eklendi, kodu elle yazabilirsin.';st.className='loc-status err';return;}
+  var added=fillCodes(codes);
+  st.textContent='✅ '+codes.length+' kod bulundu'+(added<codes.length?' ('+(codes.length-added)+' tanesi zaten vardı)':'')+'. Kontrol et, yanlış olanı ✕ ile sil.';st.className='loc-status ok';
+  document.getElementById('f-paste').value='';
+  document.getElementById('codes-list').scrollIntoView({behavior:'smooth',block:'center'});
+}
+// Kod kutusuna doğrudan yapıştırınca da temizle
+document.addEventListener('paste',function(e){
+  var el=e.target;if(!el||!el.classList||!el.classList.contains('ccode')||!el.closest('#codes-list'))return;
+  var txt=(e.clipboardData||window.clipboardData).getData('text');if(!txt)return;
+  var codes=extractCodes(txt);
+  if(codes.length===1&&!/[\n%]/.test(txt)&&cleanPasted(txt).replace(/\s/g,'')===codes[0].code)return; // zaten temiz tek kod
+  e.preventDefault();
+  if(!codes.length){el.value=cleanPasted(txt).replace(/\s+/g,' ');toast('Kod bulunamadı, metin temizlenip yapıştırıldı',3000);return;}
+  el.value=codes[0].code;var lab=el.parentElement.querySelectorAll('input')[1];if(lab&&!lab.value)lab.value=codes[0].label;
+  if(codes.length>1)fillCodes(codes.slice(1));
+  toast('✨ '+codes.length+' kod ayıklandı',2500);
+});
 
 // ── SETTINGS ───────────────────────────────────────────────
 function toggleSetting(key,btn){settings[key]=!settings[key];btn.classList.toggle('on',settings[key]);save();}
