@@ -103,6 +103,11 @@
   #tab-map .map-legend{position:absolute;top:10px;left:10px;z-index:500;display:flex;gap:10px;background:rgba(19,19,26,.9);border:1px solid var(--border);border-radius:10px;padding:6px 10px;font-size:11px;color:var(--text2);}
   .map-legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
 
+  .kind-toggle{display:flex;gap:8px;}
+  .kind-toggle button{flex:1;padding:14px 6px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-family:var(--sans);font-size:15px;font-weight:600;cursor:pointer;}
+  .kind-toggle button[data-k="gate"].active{border-color:var(--accent);color:var(--accent);background:#00e5a014;}
+  .kind-toggle button[data-k="wc"].active{border-color:#4da3ff;color:#4da3ff;background:#4da3ff14;}
+
   /* BOTTOM NAV */
   .bnav{position:fixed;left:0;right:0;bottom:0;z-index:250;display:flex;background:rgba(19,19,26,.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:6px 8px calc(6px + env(safe-area-inset-bottom));}
   .bnav button{flex:1;background:none;border:none;color:var(--text3);font-family:var(--sans);font-size:11px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;cursor:pointer;}
@@ -316,6 +321,13 @@
         <input type="range" class="rslider" min="1" max="20" step="1" id="default-radius-slider" value="10" oninput="updateDefaultRadius(this.value)" style="margin-top:8px;width:100%">
       </div>
     </div>
+    <div class="settings-row" style="flex-direction:column;align-items:stretch">
+      <div><div class="settings-row-label">Yeni kayıtta ne seçili gelsin?</div><div class="settings-row-sub">Kayıt eklerken istediğin zaman değiştirebilirsin</div></div>
+      <div class="unit-toggle">
+        <button class="unit-btn" id="defkind-gate" onclick="setDefaultKind('gate')">🔑 Kapı kodu</button>
+        <button class="unit-btn" id="defkind-wc" onclick="setDefaultKind('wc')">🚻 Tuvalet</button>
+      </div>
+    </div>
   </div>
 
   <div class="settings-head">📍 Yerlerimiz</div>
@@ -355,7 +367,7 @@
       <span>⚠️</span>
     </div>
   </div>
-  <div style="text-align:center;padding:20px 0;color:var(--text3);font-size:12px;font-family:var(--mono)">v2.1.0 · ozbekla.github.io</div>
+  <div style="text-align:center;padding:20px 0;color:var(--text3);font-size:12px;font-family:var(--mono)">v2.2.0 · ozbekla.github.io</div>
 </div>
 </div>
 
@@ -373,6 +385,15 @@
     <div class="modal-handle"></div>
     <div class="modal-title" id="modal-title">Yeni Yer Ekle</div>
 
+    <!-- NE EKLİYORUM: Kapı kodu / Tuvalet -->
+    <div class="fsec">
+      <label class="flabel">Ne ekliyorsun?</label>
+      <div class="kind-toggle" id="kind-toggle">
+        <button type="button" data-k="gate" onclick="setKind('gate')">🔑 Kapı kodu</button>
+        <button type="button" data-k="wc" onclick="setKind('wc')">🚻 Tuvalet şifresi</button>
+      </div>
+    </div>
+
     <!-- ADDRESS FIRST -->
     <div class="fsec">
       <label class="flabel">Adres Ara (US) — Yer adı otomatik dolar</label>
@@ -389,8 +410,8 @@
       <input type="text" class="finput" id="f-name" placeholder="Maple Grove Apt, Building A...">
     </div>
 
-    <div class="fsec">
-      <label class="flabel">Kategori</label>
+    <div class="fsec" id="f-type-sec">
+      <label class="flabel">Bina türü</label>
       <select class="fselect" id="f-type">
         <option value="🏘️">🏘️ Apartment Complex</option>
         <option value="🏢">🏢 Office / Business</option>
@@ -399,7 +420,6 @@
         <option value="🚪">🚪 Main Gate</option>
         <option value="🅿️">🅿️ Parking Garage</option>
         <option value="📦">📦 Warehouse / Depot</option>
-        <option value="🚻">🚻 Restroom (Tuvalet)</option>
         <option value="⭐">⭐ Other</option>
       </select>
     </div>
@@ -500,6 +520,15 @@ function isWC(l){return l.type==='🚻';}
 function codeFilter(){return settings.codeFilter||'all';}
 function passFilter(l){var f=codeFilter();return f==='all'||(f==='wc'?isWC(l):!isWC(l));}
 function setCodeFilter(f){settings.codeFilter=f;save();applyCodeFilterUI();render(nearbyIds);if(mainMap)fitMapBounds(lastPos&&lastPos.lat,lastPos&&lastPos.lng);}
+var curKind='gate';
+function setKind(k){
+  curKind=k;
+  document.querySelectorAll('#kind-toggle button').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-k')===k);});
+  document.getElementById('f-type-sec').hidden=(k==='wc');
+  document.getElementById('f-name').placeholder=k==='wc'?'Shell Station, Starbucks...':'Maple Grove Apt, Building A...';
+}
+function setDefaultKind(k){settings.defaultKind=k;save();applyDefaultKindUI();}
+function applyDefaultKindUI(){var k=settings.defaultKind||'gate';document.getElementById('defkind-gate').classList.toggle('active',k==='gate');document.getElementById('defkind-wc').classList.toggle('active',k==='wc');}
 function applyCodeFilterUI(){document.querySelectorAll('#code-filters button').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-f')===codeFilter());});}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function distM(a,b,c,d){var R=6371000,dL=(c-a)*Math.PI/180,dN=(d-b)*Math.PI/180,x=Math.sin(dL/2)*Math.sin(dL/2)+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dN/2)*Math.sin(dN/2);return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
@@ -823,12 +852,14 @@ function openAdd(){
   var defStep=settings.defaultRadius||10;
   document.getElementById('f-radius').value=defStep;
   document.getElementById('f-rval').textContent=stepLabel(defStep);
-  document.getElementById('f-type').value=codeFilter()==='wc'?'🚻':'🏘️';
+  document.getElementById('f-type').value='🏘️';
+  setKind(codeFilter()==='wc'?'wc':(codeFilter()==='gate'?'gate':(settings.defaultKind||'gate')));
   setLocStatus('Adres ara veya GPS al');
   document.getElementById('addr-results').style.display='none';
   document.getElementById('codes-list').innerHTML='';
   addCodeRow();
   document.getElementById('modal-overlay').classList.add('open');
+  document.querySelector('#modal-overlay .modal').scrollTop=0;
   setTimeout(function(){if(locMarker&&locMap){locMap.removeLayer(locMarker);locMarker=null;}initMap(null,null);},200);
 }
 function openEdit(id){
@@ -845,13 +876,16 @@ function openEdit(id){
   var step=mToStep(storedM);
   document.getElementById('f-radius').value=step;
   document.getElementById('f-rval').textContent=stepLabel(step);
-  document.getElementById('f-type').value=loc.type||'🏘️';
+  document.getElementById('f-type').value=isWC(loc)?'🏘️':(loc.type||'🏘️');
+  if(!document.getElementById('f-type').value)document.getElementById('f-type').value='⭐';
+  setKind(isWC(loc)?'wc':'gate');
   document.getElementById('addr-results').style.display='none';
   if(loc.lat&&loc.lng)setLocStatus('✅ '+loc.lat.toFixed(5)+', '+loc.lng.toFixed(5),'ok');
   else setLocStatus('No location — search or use GPS');
   document.getElementById('codes-list').innerHTML='';
   var codes=loc.codes||[];for(var i=0;i<codes.length;i++)addCodeRow(codes[i]);
   document.getElementById('modal-overlay').classList.add('open');
+  document.querySelector('#modal-overlay .modal').scrollTop=0;
   setTimeout(function(){initMap(loc.lat||null,loc.lng||null);},200);
 }
 function closeModal(){document.getElementById('modal-overlay').classList.remove('open');document.getElementById('addr-results').style.display='none';}
@@ -875,7 +909,7 @@ function saveLocation(){
   for(var i=0;i<rows.length;i++){var ins=rows[i].querySelectorAll('input');var code=ins[0].value.trim(),label=ins[1].value.trim();if(code)codes.push({code:code,label:label});}
   if(!codes.length){toast('❗ En az bir kod gir');return;}
   var step=parseInt(document.getElementById('f-radius').value)||10;
-  var loc={id:editingId||uid(),name:name,addr:document.getElementById('f-addr').value.trim(),lat:parseFloat(document.getElementById('f-lat').value)||null,lng:parseFloat(document.getElementById('f-lng').value)||null,radiusM:stepToM(step),type:document.getElementById('f-type').value,note:document.getElementById('f-note').value.trim(),codes:codes,updatedAt:Date.now()};
+  var loc={id:editingId||uid(),name:name,addr:document.getElementById('f-addr').value.trim(),lat:parseFloat(document.getElementById('f-lat').value)||null,lng:parseFloat(document.getElementById('f-lng').value)||null,radiusM:stepToM(step),type:curKind==='wc'?'🚻':document.getElementById('f-type').value,note:document.getElementById('f-note').value.trim(),codes:codes,updatedAt:Date.now()};
   if(editingId){for(var i=0;i<locations.length;i++){if(locations[i].id===editingId){locations[i]=loc;break;}}}
   else locations.push(loc);
   save();render(nearbyIds);closeModal();toast(editingId?'✅ Güncellendi':'✅ Kaydedildi');
@@ -1366,7 +1400,7 @@ function yReplace(){
 }
 
 // ── INIT ───────────────────────────────────────────────────
-load();applySettings();applyCodeFilterUI();render();
+load();applySettings();applyCodeFilterUI();applyDefaultKindUI();render();
 yLoad();yApplySettings();
 yOpenIdb().then(function(db){yIdb=db;if(curSec==='places')yRender();});
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(function(){});
