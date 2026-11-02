@@ -251,6 +251,26 @@
   .y-colors span{display:block;width:30px;height:30px;border-radius:50%;border:3px solid transparent;}
   .y-colors input:checked+span{border-color:#fff;}
   .y-hint{font-size:12px;color:var(--text3);line-height:1.5;}
+  /* ── LEZZETLER ── */
+  .y-here{width:100%;flex:none;margin-top:4px;padding:14px;}
+  .y-stars{color:#ffb020;font-size:13px;letter-spacing:1px;}
+  .y-stars .off{color:var(--border);}
+  .y-items{display:flex;flex-direction:column;gap:8px;}
+  .y-item{all:unset;box-sizing:border-box;width:100%;display:flex;align-items:center;gap:12px;padding:11px 12px;background:var(--bg);border:1px solid var(--border);border-radius:12px;cursor:pointer;}
+  .y-item.static{cursor:default;}
+  .y-ithumb{width:48px;height:48px;border-radius:9px;object-fit:cover;flex-shrink:0;background:var(--surface2);}
+  .y-starbar{display:flex;gap:6px;}
+  .y-starbar button{background:none;border:none;font-size:36px;line-height:1;color:var(--border);cursor:pointer;padding:0 2px;}
+  .y-starbar button.on{color:#ffb020;}
+  .y-wide{flex:none;width:100%;padding:12px;margin-top:8px;}
+  .y-inline{flex:none;display:inline-flex;padding:10px 14px;margin-top:10px;}
+  .y-photos img[data-yact]{cursor:zoom-in;}
+  #y-viewer{position:fixed;inset:0;z-index:700;background:#000;overflow:auto;-webkit-overflow-scrolling:touch;display:flex;align-items:center;}
+  #y-viewer[hidden]{display:none!important;}
+  #y-vimg{display:block;width:100%;height:auto;margin:auto;}
+  #y-viewer.zoom{display:block;}
+  #y-viewer.zoom #y-vimg{width:260%;max-width:none;}
+  .y-vclose{position:fixed;top:calc(12px + env(safe-area-inset-top));right:12px;z-index:2;}
   details summary{cursor:pointer;}
 </style>
 </head>
@@ -290,8 +310,10 @@
   <div class="tabs">
     <button class="tab active" id="y-tab-list" onclick="yShowView('list')">Liste</button>
     <button class="tab" id="y-tab-map" onclick="yShowView('map')">🗺 Harita</button>
+    <button class="tab" id="y-tab-food" onclick="yShowView('food')">🍽 Lezzetler</button>
   </div>
   <div class="content" id="y-list"></div>
+  <div class="content" id="y-food" style="display:none"></div>
   <div id="y-maptab">
     <div id="y-map"></div>
     <button class="map-my-loc-btn" onclick="yLocate()" title="Konumuma git">📍</button>
@@ -367,7 +389,7 @@
       <span>⚠️</span>
     </div>
   </div>
-  <div style="text-align:center;padding:20px 0;color:var(--text3);font-size:12px;font-family:var(--mono)">v2.2.0 · ozbekla.github.io</div>
+  <div style="text-align:center;padding:20px 0;color:var(--text3);font-size:12px;font-family:var(--mono)">v2.3.0 · ozbekla.github.io</div>
 </div>
 </div>
 
@@ -477,6 +499,7 @@
   <button class="scan-cancel" onclick="cancelScan()">İptal</button>
 </div>
 
+<div id="y-viewer" hidden onclick="this.classList.toggle('zoom')"><button class="y-x y-vclose" onclick="event.stopPropagation();document.getElementById('y-viewer').hidden=true;document.getElementById('y-viewer').classList.remove('zoom')">✕</button><img id="y-vimg" alt=""></div>
 <div class="toast" id="toast"></div>
 <input type="file" id="import-input" accept=".json" style="display:none" onchange="handleImport(event)">
 <input type="file" id="y-import" accept=".json,application/json" style="display:none" onchange="yReadImport(event)">
@@ -553,7 +576,7 @@ function showSec(s){
   window.scrollTo(0,0);
 }
 function hdrAction(){if(curSec==='codes')scanNearby();else if(curSec==='places')yLocate();}
-function fabAction(){if(curSec==='codes')openAdd();else if(curSec==='places')yStartAdd();}
+function fabAction(){if(curSec==='codes')openAdd();else if(curSec==='places'){if(yView==='food')yBrandSheet(null,'');else yStartAdd();}}
 
 // ── TABS (kapı kodları) ────────────────────────────────────
 function showTab(tab){
@@ -958,7 +981,7 @@ function clearAll(){locations=[];save();render();toast('🗑 Silindi');}
 // ── YERLERİMİZ ────────────────────────────────────────────
 // Kayıtlar: localStorage 'yerlerimiz_v1'  ·  Fotoğraflar: IndexedDB 'yerlerimiz_photos'
 // ══════════════════════════════════════════════════════════
-var Y={cats:[],places:[],set:{nav:'google',radius:805}};
+var Y={cats:[],places:[],brands:[],set:{nav:'google',radius:805}};
 var Y_COLORS=['#ff5c8a','#ffb020','#4da3ff','#00e5a0','#b18cff','#ff6b35','#3dd6d0','#e8e86a'];
 var Y_SEED=[
   {id:'kizim',name:'Kızım',parent:null,order:1,color:'#ff5c8a'},
@@ -978,7 +1001,7 @@ var yIdb=null,yUrls={};
 
 function ySave(){storeSet('yerlerimiz_v1',JSON.stringify(Y));}
 function yLoad(){
-  try{var r=storeGet('yerlerimiz_v1');if(r){var d=JSON.parse(r);Y.cats=d.cats||[];Y.places=d.places||[];Y.set=Object.assign({nav:'google',radius:805},d.set||{});}}catch(e){}
+  try{var r=storeGet('yerlerimiz_v1');if(r){var d=JSON.parse(r);Y.cats=d.cats||[];Y.places=d.places||[];Y.brands=d.brands||[];Y.set=Object.assign({nav:'google',radius:805},d.set||{});}}catch(e){}
   if(!Y.cats.length){Y.cats=Y_SEED.map(function(c){return Object.assign({},c);});ySave();}
 }
 
@@ -1027,9 +1050,12 @@ function yShowView(v){
   yView=v;
   document.getElementById('y-list').style.display=v==='list'?'':'none';
   document.getElementById('y-maptab').style.display=v==='map'?'block':'none';
+  document.getElementById('y-food').style.display=v==='food'?'':'none';
   document.getElementById('y-tab-list').classList.toggle('active',v==='list');
   document.getElementById('y-tab-map').classList.toggle('active',v==='map');
+  document.getElementById('y-tab-food').classList.toggle('active',v==='food');
   if(v==='map')yInitMap();
+  if(v==='food')yRenderFood();
 }
 function yRender(){
   document.getElementById('y-sub').textContent=Y.places.length+' yer · '+Y.cats.length+' başlık';
@@ -1051,6 +1077,7 @@ function yRender(){
   qi.oninput=function(){yQuery=qi.value;var pos=qi.selectionStart;yRender();var n=document.getElementById('y-q');n.focus();try{n.setSelectionRange(pos,pos);}catch(e){}};
   yHydrate(el);
   yDrawPins(list,key);
+  if(yView==='food')yRenderFood();
 }
 function yCatCard(c){var n=yIn(c.id,true).length,subs=yChildren(c.id).length;return '<button class="y-cat" style="--cc:'+yColor(c.id)+'" data-yact="open" data-id="'+c.id+'"><span class="dot"></span><b>'+esc(c.name)+'</b><small>'+n+' yer'+(subs?' · '+subs+' alt başlık':'')+'</small></button>';}
 function yHomeView(){
@@ -1126,17 +1153,20 @@ function yOpenPlace(id){
   var p=yPlace(id);if(!p)return;ySheet={type:'place',id:id};
   var L_=yNavLinks(p),order=[Y.set.nav].concat(['google','apple','waze'].filter(function(x){return x!==Y.set.nav;})),d=yDist(p);
   var h='<div class="y-sheet"><div class="y-top"><div><div class="y-path" style="--cc:'+yColor(p.cat)+'">'+esc(yPath(p.cat))+'</div><h3>'+esc(p.name)+'</h3>'+(d!=null?'<div class="y-dist" style="margin-top:4px">'+fmtDist(d)+' uzakta</div>':'')+'</div><button class="y-x" onclick="yClose()">✕</button></div>';
-  if((p.photos||[]).length)h+='<div class="y-photos">'+p.photos.map(function(id){return '<img data-pid="'+id+'" alt="">';}).join('')+'</div>';
+  if((p.photos||[]).length)h+='<div class="y-photos">'+p.photos.map(function(id){return '<img data-pid="'+id+'" data-yact="viewphoto" alt="">';}).join('')+'</div>';
   if(p.note)h+='<div class="y-note">'+esc(p.note)+'</div>';
+  h+=yPlaceFoodBlock(p);
   if(p.address)h+='<div><div class="flabel">Adres</div><div style="font-size:14px;line-height:1.5">'+esc(p.address)+'</div></div>';
   h+='<div><div class="flabel">Yol tarifi</div><div class="y-navgrid">'+order.map(function(k){return '<a href="'+esc(L_[k])+'" target="_blank" rel="noopener" class="'+(k===Y.set.nav?'pref':'')+'">'+Y_NAVNAME[k]+(k===Y.set.nav?'<small>varsayılan</small>':'')+'</a>';}).join('')+'</div></div>';
   h+='<div class="entry-actions" style="padding:0"><button class="btn-sm" data-yact="edit" data-id="'+p.id+'">✏️ Düzenle</button><button class="btn-sm" data-yact="showmap" data-id="'+p.id+'">🗺 Haritada</button><button class="btn-sm danger" data-yact="delplace" data-id="'+p.id+'">🗑 Sil</button></div></div>';
   yOpenSheet(h);
 }
-function yStartAdd(pt){
+function yStartAdd(pt,pre){
   var cat=yCur||((yChildren(null)[0]||{}).id)||'';
+  if(pre&&pre.cat&&yCat(pre.cat))cat=pre.cat;
   if(!cat){yCatSheet(null,null);return;}
-  yDraft={id:null,name:'',cat:cat,address:'',note:'',photos:[],lat:pt?pt.lat:null,lng:pt?pt.lng:null,nameTouched:false,catTouched:false};
+  yDraft={id:null,name:'',cat:cat,address:'',note:'',photos:[],lat:pt?pt.lat:null,lng:pt?pt.lng:null,nameTouched:false,catTouched:false,brandId:null};
+  if(pre){if(pre.name){yDraft.name=pre.name;yDraft.nameTouched=true;}if(pre.cat)yDraft.catTouched=true;if(pre.brandId)yDraft.brandId=pre.brandId;}
   yFormSheet();
   if(pt){yMovePin(pt.lat,pt.lng,true);return;}
   yStatus('⏳ Konum alınıyor…');
@@ -1256,10 +1286,11 @@ function ySavePlace(){
   if(!f.name){toast('❗ Bir isim yaz');return;}
   if(f.lat==null&&!f.address){toast('❗ Konum ya da adres gerekli');return;}
   var old=f.id?yPlace(f.id):null;
-  var p={id:f.id||uid(),name:f.name,cat:f.cat,address:f.address,note:f.note,photos:f.photos,lat:f.lat!=null?f.lat:null,lng:f.lng!=null?f.lng:null,created:old?old.created:Date.now(),updated:Date.now()};
+  var p={id:f.id||uid(),name:f.name,cat:f.cat,address:f.address,note:f.note,photos:f.photos,lat:f.lat!=null?f.lat:null,lng:f.lng!=null?f.lng:null,brandId:f.brandId||(old&&old.brandId)||null,created:old?old.created:Date.now(),updated:Date.now()};
   if(old){(old.photos||[]).forEach(function(ph){if(p.photos.indexOf(ph)<0)yPhotoDel(ph);});Y.places=Y.places.map(function(x){return x.id===p.id?p:x;});}
   else Y.places.push(p);
   ySave();yCur=p.cat;yLastScope='';yClose();yRender();toast(old?'✅ Güncellendi':'✅ Kaydedildi');
+  if(!old&&p.brandId&&yBrand(p.brandId))setTimeout(function(){yOpenBrand(p.brandId,'✓ Şube Yerlerimiz’e eklendi');},250);
 }
 function yDeletePlace(id){
   var p=yPlace(id);if(!p)return;
@@ -1304,7 +1335,250 @@ document.addEventListener('click',function(e){
   else if(a==='newcat')yCatSheet(null,t.getAttribute('data-parent')||null);
   else if(a==='editcat')yCatSheet(id,null);
   else if(a==='delcat')yDeleteCat(id);
+  else if(yFoodClick(a,id,t))return;
 });
+
+// ══════════════════════════════════════════════════════════
+// ── LEZZETLER (mekân bazlı yeme-içme defteri) ─────────────
+// Y.brands = [{id,name,items:[{id,name,rating,note,photos,date}],menuPhotos,created,updated}]
+// Yerlerimiz'deki bir yer, isim eşleşmesiyle ya da brandId ile bir mekâna bağlanır.
+// ══════════════════════════════════════════════════════════
+var yFoodQ='',yItemDraft=null;
+function yNorm(s){return String(s||'').toLocaleLowerCase('tr').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[’'`´]/g,'').replace(/[^a-z0-9ı]+/g,' ').trim();}
+function yBrand(id){var b=Y.brands||[];for(var i=0;i<b.length;i++)if(b[i].id===id)return b[i];return null;}
+function yFindBrandExact(name){var n=yNorm(name),b=Y.brands||[];for(var i=0;i<b.length;i++)if(yNorm(b[i].name)===n)return b[i];return null;}
+function yFindBrandByName(name){
+  var n=yNorm(name),b=Y.brands||[];if(!n)return null;
+  for(var i=0;i<b.length;i++){var k=yNorm(b[i].name);if(k.length>=3&&(n===k||n.indexOf(k+' ')===0||k.indexOf(n+' ')===0))return b[i];}
+  return null;
+}
+function yBrandFor(p){
+  if(p.brandId){var x=yBrand(p.brandId);if(x)return x;}
+  var n=yNorm(p.name),b=Y.brands||[];
+  for(var i=0;i<b.length;i++){var k=yNorm(b[i].name);if(k.length>=3&&(n===k||n.indexOf(k+' ')===0))return b[i];}
+  return null;
+}
+function yBranches(b){return Y.places.filter(function(p){return yBrandFor(p)===b;});}
+function yBrandPhotoIds(list){var o=[];(list||[]).forEach(function(b){(b.menuPhotos||[]).forEach(function(i){o.push(i);});(b.items||[]).forEach(function(it){(it.photos||[]).forEach(function(i){o.push(i);});});});return o;}
+function yStars(r){r=r||0;return '<span class="y-stars">'+'★'.repeat(r)+'<span class="off">'+'★'.repeat(5-r)+'</span></span>';}
+function yItemsSorted(b){return (b.items||[]).slice().sort(function(a,c){return (c.rating||0)-(a.rating||0)||(c.date||0)-(a.date||0);});}
+function yDate(ts){try{return new Date(ts).toLocaleDateString('tr-TR',{day:'numeric',month:'short',year:'numeric'});}catch(e){return '';}}
+function yIsFoodCat(cid){var ch=yChain(cid);return ch[0]==='yeme-icme'||(ch[0]&&/yeme|icme|yemek|restoran|kafe/.test(yNorm(yCat(ch[0]).name)));}
+
+// liste
+function yRenderFood(){
+  var el=document.getElementById('y-food');if(!el)return;
+  var q=yFoodQ.trim(),qn=yNorm(q);
+  var h='<button class="btn-save y-here" onclick="yHere()">📍 Buradayım · daha önce geldik mi?</button>';
+  h+='<input class="finput" id="y-fq" type="search" placeholder="🔍 Mekân ya da yemek ara: del taco, boba…" value="'+esc(yFoodQ)+'" autocomplete="off" style="margin-top:10px">';
+  var list=(Y.brands||[]).filter(function(b){return !qn||yNorm(b.name).indexOf(qn)>=0||(b.items||[]).some(function(i){return yNorm(i.name).indexOf(qn)>=0||yNorm(i.note).indexOf(qn)>=0;});})
+    .sort(function(a,b){return (b.updated||0)-(a.updated||0);});
+  h+='<div class="y-label">'+(q?list.length+' sonuç':'Mekânlar · son gidilen üstte')+'</div>';
+  if(list.length)h+='<div class="y-places">'+list.map(function(b){return yBrandRow(b,qn);}).join('')+'</div>';
+  else h+='<div class="y-empty">'+(q?'“'+esc(q)+'” için kayıt yok.<br><button class="btn-sm y-inline" data-yact="newbrand" data-name="'+esc(q)+'">+ “'+esc(q)+'” defterini aç</button>':'Henüz lezzet kaydı yok.<br>Bir mekândayken <b>📍 Buradayım</b>’a ya da <b>+</b>’ya bas.')+'</div>';
+  el.innerHTML=h;
+  var qi=document.getElementById('y-fq');
+  qi.oninput=function(){yFoodQ=qi.value;var pos=qi.selectionStart;yRenderFood();var n=document.getElementById('y-fq');n.focus();try{n.setSelectionRange(pos,pos);}catch(e){}};
+  yHydrate(el);
+}
+function yBrandRow(b,qn){
+  var items=yItemsSorted(b),best=items[0],br=yBranches(b).length;
+  var hit=qn?items.filter(function(i){return yNorm(i.name).indexOf(qn)>=0||yNorm(i.note).indexOf(qn)>=0;})[0]:null;
+  var show=hit||best;
+  var ph=null;items.some(function(i){if(i.photos&&i.photos[0]){ph=i.photos[0];return true;}});if(!ph&&b.menuPhotos&&b.menuPhotos[0])ph=b.menuPhotos[0];
+  var t=ph?'<img class="y-thumb" data-pid="'+ph+'" alt="">':'<span class="y-thumb">🍽</span>';
+  return '<div class="y-place" style="--cc:#ffb020"><button class="y-main" data-yact="brand" data-id="'+b.id+'">'+t+'<span class="y-txt"><b>'+esc(b.name)+'</b>'
+    +(show?'<span class="sub">'+yStars(show.rating)+' '+esc(show.name)+'</span>':'<span class="sub">Henüz deneme yok</span>')
+    +'<span class="y-hint">'+items.length+' deneme'+(br?' · '+br+' şube kayıtlı':'')+(b.updated?' · '+yDate(b.updated):'')+'</span></span></button></div>';
+}
+
+// mekân sayfası
+function yOpenBrand(id,banner){
+  var b=yBrand(id);if(!b)return;ySheet={type:'brand',id:id};
+  var items=yItemsSorted(b),br=yBranches(b);
+  var h='<div class="y-sheet">'+(banner?'<div class="y-ok"><b style="color:var(--accent)">'+banner+'</b></div>':'');
+  h+='<div class="y-top"><div><div class="y-path" style="--cc:#ffb020">🍽 Lezzetler</div><h3>'+esc(b.name)+'</h3><div class="y-hint">'+items.length+' deneme</div></div><button class="y-x" onclick="yClose()">✕</button></div>';
+  h+='<button class="btn-save" style="flex:none" data-yact="additem" data-id="'+b.id+'">+ Denediğimizi ekle</button>';
+  if(items.length){
+    h+='<div class="y-items">'+items.map(function(i){
+      return '<button class="y-item" data-yact="edititem" data-id="'+b.id+'" data-item="'+i.id+'">'+(i.photos&&i.photos[0]?'<img class="y-ithumb" data-pid="'+i.photos[0]+'" alt="">':'')
+        +'<span class="y-txt"><b>'+esc(i.name)+'</b>'+yStars(i.rating)+(i.note?'<span class="sub">'+esc(i.note)+'</span>':'')+'<span class="y-hint">'+yDate(i.date)+'</span></span></button>';
+    }).join('')+'</div>';
+  } else h+='<div class="y-empty">Henüz bir şey eklemedin. Denediğin ilk şeyi ekle.</div>';
+  h+='<div><div class="flabel">Menü fotoğrafları</div>'+((b.menuPhotos||[]).length?'<div class="y-photos">'+b.menuPhotos.map(function(pid){return '<img data-pid="'+pid+'" data-yact="viewphoto" alt="Menü">';}).join('')+'</div>':'<div class="y-hint" style="margin-bottom:8px">Menünün fotoğrafını çekersen bir dahaki sefere buradan bakarsın. Dokununca büyür.</div>')
+    +'<div class="y-photo-btns" style="margin-top:8px"><label>📷 Menüyü çek<input type="file" accept="image/*" capture="environment" hidden onchange="yAddMenuPhotos(this,\''+b.id+'\')"></label><label>🖼 Galeriden<input type="file" accept="image/*" multiple hidden onchange="yAddMenuPhotos(this,\''+b.id+'\')"></label></div></div>';
+  h+='<div><div class="flabel">Yerlerimiz’de kayıtlı şubeler</div>'+(br.length?'<div class="y-places">'+br.map(function(p){return yRow(p,false);}).join('')+'</div>':'<div class="y-hint">Henüz kayıtlı şube yok.</div>')
+    +'<button class="btn-sm y-wide" data-yact="addbranch" data-id="'+b.id+'">📍 Bu şubeyi Yerlerimiz’e ekle</button></div>';
+  h+='<div class="entry-actions" style="padding:0"><button class="btn-sm" data-yact="renamebrand" data-id="'+b.id+'">✏️ Adını değiştir</button><button class="btn-sm danger" data-yact="delbrand" data-id="'+b.id+'">🗑 Defteri sil</button></div></div>';
+  if(curSec!=='places')showSec('places');
+  yOpenSheet(h);
+}
+function yBrandSheet(id,name,after){
+  var b=id?yBrand(id):null;ySheet={type:'brandname',id:id,after:after||null};
+  var h='<div class="y-sheet"><div class="y-top"><h3>'+(b?'Mekân adını değiştir':'Yeni mekân')+'</h3><button class="y-x" onclick="yClose()">✕</button></div>';
+  h+='<div><label class="flabel">Mekân adı</label><input class="finput" id="yb-name" value="'+esc(b?b.name:(name||''))+'" placeholder="Örn. Del Taco, Kung Fu Tea"><div class="y-hint" style="margin-top:6px">Şube adı yazma, sadece mekânın adı. Tüm şubeler aynı defterde toplanır.</div></div>';
+  h+='<div class="modal-actions" style="padding:6px 0 0"><button class="btn-cancel" onclick="yClose()">İptal</button><button class="btn-save" onclick="ySaveBrand()">'+(b?'Kaydet':'Defteri aç')+'</button></div></div>';
+  yOpenSheet(h);
+  setTimeout(function(){var i=document.getElementById('yb-name');if(i&&!i.value)i.focus();},200);
+}
+function yEnsureBrand(name){
+  var ex=yFindBrandExact(name);if(ex)return ex;
+  var b={id:uid(),name:name.trim(),items:[],menuPhotos:[],created:Date.now(),updated:Date.now()};
+  Y.brands.push(b);ySave();return b;
+}
+function ySaveBrand(){
+  var name=(document.getElementById('yb-name').value||'').trim();if(!name){toast('❗ Mekânın adını yaz');return;}
+  var s=ySheet,b;
+  if(s.id){b=yBrand(s.id);var other=yFindBrandExact(name);if(other&&other!==b){toast('Bu isimde bir defter zaten var',3000);return;}b.name=name;ySave();}
+  else b=yEnsureBrand(name);
+  yRender();
+  if(s.after==='addbranch')yAddBranch(b.id,s.pos);
+  else yOpenBrand(b.id);
+}
+function yDeleteBrand(id){
+  var b=yBrand(id);if(!b)return;
+  if(!confirm('“'+b.name+'” defteri ve içindeki '+(b.items||[]).length+' deneme silinsin mi? Yerlerimiz’deki şubeler silinmez.'))return;
+  yBrandPhotoIds([b]).forEach(yPhotoDel);
+  Y.brands=Y.brands.filter(function(x){return x!==b;});
+  Y.places.forEach(function(p){if(p.brandId===id)p.brandId=null;});
+  ySave();yClose();yRender();toast('🗑 Defter silindi');
+}
+function yAddBranch(bid,pos){
+  var b=yBrand(bid);if(!b)return;
+  yClose();
+  var food=yCat('yeme-icme')?'yeme-icme':null;
+  yStartAdd(pos||null,{name:b.name,cat:food,brandId:b.id});
+}
+
+// deneme ekle / düzenle
+function yItemForm(bid,iid){
+  var b=yBrand(bid);if(!b)return;
+  var it=null;(b.items||[]).forEach(function(x){if(x.id===iid)it=x;});
+  yItemDraft={bid:bid,id:it?it.id:null,name:it?it.name:'',rating:it?it.rating||0:0,note:it?it.note||'':'',photos:it?(it.photos||[]).slice():[],date:it?it.date:Date.now()};
+  ySheet={type:'item'};
+  var names={};(b.items||[]).forEach(function(x){names[x.name]=1;});
+  var h='<div class="y-sheet"><div class="y-top"><div><div class="y-path" style="--cc:#ffb020">🍽 '+esc(b.name)+'</div><h3>'+(it?'Denemeyi düzenle':'Ne denedik?')+'</h3></div><button class="y-x" onclick="yOpenBrand(\''+bid+'\')">✕</button></div>';
+  h+='<div><label class="flabel">Yemek / içecek</label><input class="finput" id="yi-name" list="yi-names" value="'+esc(yItemDraft.name)+'" placeholder="Örn. Taro milk tea, az şekerli"><datalist id="yi-names">'+Object.keys(names).map(function(n){return '<option value="'+esc(n)+'">';}).join('')+'</datalist></div>';
+  h+='<div><label class="flabel">Nasıldı?</label><div class="y-starbar" id="yi-stars">'+[1,2,3,4,5].map(function(v){return '<button type="button" data-yact="star" data-v="'+v+'">★</button>';}).join('')+'</div><div class="y-hint" id="yi-starlbl"></div></div>';
+  h+='<div><label class="flabel">Not</label><textarea class="ftextarea" id="yi-note" style="min-height:70px" placeholder="Az buzlu iste, büyük boy al, çok tatlıydı…">'+esc(yItemDraft.note)+'</textarea></div>';
+  h+='<div><label class="flabel">Fotoğraf</label><div class="y-photos small" id="yi-photos"></div><div class="y-photo-btns" style="margin-top:8px"><label>📷 Fotoğraf çek<input type="file" accept="image/*" capture="environment" hidden onchange="yAddItemPhotos(this)"></label><label>🖼 Galeriden<input type="file" accept="image/*" multiple hidden onchange="yAddItemPhotos(this)"></label></div></div>';
+  h+='<div class="modal-actions" style="padding:6px 0 0"><button class="btn-cancel" onclick="yOpenBrand(\''+bid+'\')">İptal</button><button class="btn-save" onclick="ySaveItem()">Kaydet</button></div>';
+  if(it)h+='<button class="btn-sm danger" style="flex:none;padding:12px" data-yact="delitem">🗑 Bu denemeyi sil</button>';
+  h+='</div>';
+  yOpenSheet(h);
+  ySetStars(yItemDraft.rating);yRenderItemPhotos();
+  if(!it)setTimeout(function(){var i=document.getElementById('yi-name');if(i)i.focus();},200);
+}
+var Y_STARLBL=['Puan vermek için yıldıza dokun','Hiç beğenmedik','Pek değil','İdare eder','Güzeldi','Çok sevdik'];
+function ySetStars(v){
+  if(yItemDraft)yItemDraft.rating=v;
+  document.querySelectorAll('#yi-stars button').forEach(function(b){b.classList.toggle('on',+b.getAttribute('data-v')<=v);});
+  var l=document.getElementById('yi-starlbl');if(l)l.textContent=Y_STARLBL[v]||'';
+}
+function yRenderItemPhotos(){
+  var el=document.getElementById('yi-photos');if(!el)return;
+  el.innerHTML=yItemDraft.photos.map(function(id,i){return '<span class="y-ph"><img data-pid="'+id+'" alt=""><button onclick="yItemDraft.photos.splice('+i+',1);yRenderItemPhotos()">×</button></span>';}).join('');
+  yHydrate(el);
+}
+function yStorePhotos(files){
+  var ids=[],chain=Promise.resolve();
+  files.forEach(function(f){chain=chain.then(function(){return yResize(f);}).then(function(b){var id=uid();return yPhotoPut(id,b).then(function(){yUrls[id]=URL.createObjectURL(b);ids.push(id);});});});
+  return chain.then(function(){return ids;});
+}
+function yAddItemPhotos(input){
+  var files=Array.prototype.slice.call(input.files||[]);input.value='';if(!files.length)return;
+  toast('🖼 Fotoğraf işleniyor…');
+  yStorePhotos(files).then(function(ids){if(yItemDraft){yItemDraft.photos=yItemDraft.photos.concat(ids);yRenderItemPhotos();}toast('✅ Fotoğraf eklendi');}).catch(function(){toast('❌ Fotoğraf eklenemedi');});
+}
+function yAddMenuPhotos(input,bid){
+  var files=Array.prototype.slice.call(input.files||[]);input.value='';if(!files.length)return;
+  toast('🖼 Menü fotoğrafı işleniyor…');
+  yStorePhotos(files).then(function(ids){var b=yBrand(bid);if(!b)return;b.menuPhotos=(b.menuPhotos||[]).concat(ids);ySave();yOpenBrand(bid);toast('✅ Menü fotoğrafı eklendi');}).catch(function(){toast('❌ Fotoğraf eklenemedi');});
+}
+function ySaveItem(){
+  var d=yItemDraft,b=d&&yBrand(d.bid);if(!b)return;
+  d.name=(document.getElementById('yi-name').value||'').trim();d.note=(document.getElementById('yi-note').value||'').trim();
+  if(!d.name){toast('❗ Ne denediğini yaz');return;}
+  b.items=b.items||[];
+  var old=null;b.items.forEach(function(x){if(x.id===d.id)old=x;});
+  var it={id:d.id||uid(),name:d.name,rating:d.rating||0,note:d.note,photos:d.photos,date:old?old.date:Date.now()};
+  if(old){(old.photos||[]).forEach(function(ph){if(it.photos.indexOf(ph)<0)yPhotoDel(ph);});b.items=b.items.map(function(x){return x.id===it.id?it:x;});}
+  else b.items.push(it);
+  b.updated=Date.now();ySave();yItemDraft=null;yRenderFood();yOpenBrand(b.id);toast(old?'✅ Güncellendi':'✅ Eklendi');
+}
+function yDeleteItem(){
+  var d=yItemDraft,b=d&&yBrand(d.bid);if(!b||!d.id)return;
+  if(!confirm('“'+d.name+'” silinsin mi?'))return;
+  (b.items||[]).forEach(function(x){if(x.id===d.id)(x.photos||[]).forEach(yPhotoDel);});
+  b.items=b.items.filter(function(x){return x.id!==d.id;});ySave();yItemDraft=null;yRenderFood();yOpenBrand(b.id);toast('🗑 Silindi');
+}
+
+// yer detayında "Burada denediklerimiz"
+function yPlaceFoodBlock(p){
+  var b=yBrandFor(p);
+  if(b){
+    var items=yItemsSorted(b);
+    return '<div><div class="flabel">🍽 Burada denediklerimiz · '+esc(b.name)+'</div>'
+      +(items.length?'<div class="y-items">'+items.slice(0,3).map(function(i){return '<div class="y-item static"><span class="y-txt"><b>'+esc(i.name)+'</b>'+yStars(i.rating)+(i.note?'<span class="sub">'+esc(i.note)+'</span>':'')+'</span></div>';}).join('')+'</div>':'<div class="y-hint">Henüz deneme yok.</div>')
+      +'<button class="btn-sm y-wide" data-yact="brand" data-id="'+b.id+'">Lezzet defterini aç'+(items.length>3?' ('+items.length+' deneme)':'')+' ›</button></div>';
+  }
+  if(yIsFoodCat(p.cat))return '<button class="btn-sm y-wide" data-yact="brandfromplace" data-id="'+p.id+'">🍽 Burası için lezzet defteri aç</button>';
+  return '';
+}
+
+// Buradayım
+function yHere(){
+  toast('📍 Konum alınıyor…',4000);
+  yGetPos().then(function(pos){
+    var near=Y.places.filter(yHasLL).map(function(p){return {p:p,d:distM(pos.lat,pos.lng,p.lat,p.lng)};}).filter(function(x){return x.d<=150;}).sort(function(a,b){return a.d-b.d;});
+    for(var i=0;i<near.length;i++){var b=yBrandFor(near[i].p);if(b){yOpenBrand(b.id,'✓ Buraya daha önce gelmişsin');return;}}
+    return fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat='+pos.lat+'&lon='+pos.lng+'&zoom=18&namedetails=1&accept-language=en')
+      .then(function(r){return r.json();}).catch(function(){return {};})
+      .then(function(d){
+        var nm=(d&&(d.name||(d.namedetails&&d.namedetails.name)))||'';
+        var b=nm&&yFindBrandByName(nm);
+        if(b){yOpenBrand(b.id,'✓ '+esc(b.name)+'’a daha önce gelmişsin'+(yBranches(b).length?'':' (bu şube yeni)'));return;}
+        yHereNew(nm,pos);
+      });
+  }).catch(function(e){toast('❌ '+yGeoMsg(e),3500);});
+}
+function yHereNew(nm,pos){
+  ySheet={type:'here',pos:pos};
+  var h='<div class="y-sheet"><div class="y-top"><h3>'+(nm?'Burası: '+esc(nm):'Neredesin?')+'</h3><button class="y-x" onclick="yClose()">✕</button></div>';
+  h+='<div style="font-size:14px;line-height:1.5;color:var(--text2)">'+(nm?'Bu mekân için daha önce kayıt yok. İlk kez geliyorsun gibi görünüyor.':'Haritada burada bir mekân adı bulamadım. Adını yazarsan önce eski kayıtlarda ararım, yoksa yeni defter açarım.')+'</div>';
+  h+='<div><label class="flabel">Mekân adı</label><input class="finput" id="yh-name" value="'+esc(nm)+'" placeholder="Örn. Del Taco"></div>';
+  h+='<label class="y-check" style="accent-color:var(--accent)"><input type="checkbox" id="yh-place" style="accent-color:#00e5a0"><span>Bu şubeyi Yerlerimiz’e de kaydet (konumuyla)</span></label>';
+  h+='<div class="modal-actions" style="padding:6px 0 0"><button class="btn-cancel" onclick="yClose()">İptal</button><button class="btn-save" onclick="yHereGo()">🍽 Defteri aç</button></div></div>';
+  yOpenSheet(h);
+}
+function yHereGo(){
+  var name=(document.getElementById('yh-name').value||'').trim();if(!name){toast('❗ Mekânın adını yaz');return;}
+  var addPlace=document.getElementById('yh-place').checked,pos=ySheet.pos;
+  var b=yFindBrandByName(name)||yEnsureBrand(name);
+  yRender();
+  if(addPlace)yAddBranch(b.id,pos);else yOpenBrand(b.id);
+}
+function yViewPhoto(pid){
+  var v=document.getElementById('y-viewer'),img=document.getElementById('y-vimg');
+  img.src=yUrls[pid]||'';v.classList.remove('zoom');v.hidden=false;v.scrollTop=0;
+  if(!yUrls[pid])yPhotoGet(pid).then(function(r){if(r&&r.blob){yUrls[pid]=URL.createObjectURL(r.blob);img.src=yUrls[pid];}});
+}
+
+// Lezzetler tıklamaları
+function yFoodClick(a,id,t){
+  if(a==='brand'){yOpenBrand(id);return true;}
+  if(a==='newbrand'){yBrandSheet(null,t.getAttribute('data-name')||'');return true;}
+  if(a==='additem'){yItemForm(id,null);return true;}
+  if(a==='edititem'){yItemForm(id,t.getAttribute('data-item'));return true;}
+  if(a==='delitem'){yDeleteItem();return true;}
+  if(a==='star'){var v=+t.getAttribute('data-v');ySetStars(yItemDraft&&yItemDraft.rating===v?0:v);return true;}
+  if(a==='renamebrand'){yBrandSheet(id,'');return true;}
+  if(a==='delbrand'){yDeleteBrand(id);return true;}
+  if(a==='addbranch'){yAddBranch(id,null);return true;}
+  if(a==='brandfromplace'){var p=yPlace(id);if(!p)return true;var b=yFindBrandByName(p.name)||yEnsureBrand(p.name);p.brandId=b.id;ySave();yOpenBrand(b.id);return true;}
+  if(a==='viewphoto'){yViewPhoto(t.getAttribute('data-pid'));return true;}
+  return false;
+}
 
 // ── Yerlerimiz ayarları ──
 function yApplySettings(){
@@ -1317,10 +1591,11 @@ function yBlobToData(b){return new Promise(function(r){var fr=new FileReader();f
 function yExport(tag){
   toast('📦 Yedek hazırlanıyor…');
   var ids={};Y.places.forEach(function(p){(p.photos||[]).forEach(function(i){ids[i]=1;});});
+  yBrandPhotoIds(Y.brands).forEach(function(i){ids[i]=1;});
   var ph={};
   return Object.keys(ids).reduce(function(ch,id){return ch.then(function(){return yPhotoGet(id).then(function(r){if(r&&r.blob)return yBlobToData(r.blob).then(function(u){ph[id]=u;});});});},Promise.resolve())
   .then(function(){
-    var data={app:'yerlerimiz',v:1,date:new Date().toISOString(),cats:Y.cats,places:Y.places,set:Y.set,photos:ph};
+    var data={app:'yerlerimiz',v:1,date:new Date().toISOString(),cats:Y.cats,places:Y.places,brands:Y.brands,set:Y.set,photos:ph};
     var name='yerlerimiz-yedek-'+(tag?tag+'-':'')+new Date().toISOString().slice(0,10)+'.json';
     var file;try{file=new File([JSON.stringify(data)],name,{type:'application/json'});}catch(e){file=new Blob([JSON.stringify(data)],{type:'application/json'});}
     var share=(navigator.canShare&&file instanceof File&&navigator.canShare({files:[file]}))?navigator.share({files:[file],title:'Yerlerimiz yedeği'}):Promise.reject({name:'NoShare'});
@@ -1348,10 +1623,12 @@ function yImportSheet(){
   d.places.forEach(function(p){var o=yPlace(p.id);if(!o)nw++;else if((p.updated||0)>(o.updated||0))upd++;});
   var newCats=d.cats.filter(function(c){return !yCat(c.id)&&!ySameCat(c,c.parent);}).length;
   var mine=Y.places.length;
+  var nb=(d.brands||[]).filter(function(b){return !yBrand(b.id)&&!yFindBrandExact(b.name);}).length;
+  var ni=0;(d.brands||[]).forEach(function(b){var ex=yBrand(b.id)||yFindBrandExact(b.name);(b.items||[]).forEach(function(it){if(!ex||!(ex.items||[]).some(function(x){return x.id===it.id;}))ni++;});});
   var when=d.date?new Date(d.date).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'}):'';
   var h='<div class="y-sheet"><div class="y-top"><h3>Yedek yükle</h3><button class="y-x" onclick="yClose()">✕</button></div>';
   h+='<div style="font-size:14px;line-height:1.5">Yedekte <b>'+d.places.length+' yer</b>, '+d.cats.length+' başlık var'+(when?' ('+when+')':'')+'.<br>Sende şu an <b>'+mine+' yer</b> kayıtlı.</div>';
-  h+='<div class="y-ok"><div><b style="color:var(--accent)">Birleştir</b> · önerilen</div><div>Senin kayıtların olduğu gibi kalır. <b>'+nw+' yeni yer</b>'+(newCats?', '+newCats+' yeni başlık':'')+' eklenir'+(upd?', '+upd+' yerin daha yeni hali alınır':'')+'. <b>Hiçbir şey silinmez.</b></div><button class="btn-save" style="flex:none" onclick="this.disabled=true;this.textContent=\'Birleştiriliyor…\';yMerge()">Birleştir ('+nw+' yeni yer ekle)</button></div>';
+  h+='<div class="y-ok"><div><b style="color:var(--accent)">Birleştir</b> · önerilen</div><div>Senin kayıtların olduğu gibi kalır. <b>'+nw+' yeni yer</b>'+(newCats?', '+newCats+' yeni başlık':'')+' eklenir'+(upd?', '+upd+' yerin daha yeni hali alınır':'')+(ni?'. Lezzetler: <b>'+ni+' yeni deneme</b>'+(nb?' ('+nb+' yeni mekân)':''):'')+'. <b>Hiçbir şey silinmez.</b></div><button class="btn-save" style="flex:none" onclick="this.disabled=true;this.textContent=\'Birleştiriliyor…\';yMerge()">Birleştir ('+nw+' yeni yer ekle)</button></div>';
   h+='<details><summary class="y-hint" style="padding:8px 0">Diğer seçenek: sıfırlayıp yükle ›</summary>';
   h+='<div class="y-danger" style="margin-top:8px"><b>⚠️ Şu anki '+mine+' yerin silinir, yerine yedektekiler gelir.</b>';
   h+='<div>1. Önce kendi kayıtlarının yedeğini al. Yanlışlık olursa onunla geri dönersin.</div><button class="btn-sm" style="flex:none;padding:11px" id="yi-backup" onclick="yImportBackup()">📦 Önce mevcut kayıtlarımı yedekle</button>';
@@ -1377,9 +1654,17 @@ function yMerge(){
     if(ex){map[c.id]=ex.id;return;}
     var nc=Object.assign({},c,{parent:parent});Y.cats.push(nc);map[c.id]=nc.id;
   });
-  var chain=Promise.resolve();
+  var chain=Promise.resolve(),bmap={};
+  (d.brands||[]).forEach(function(b){
+    var ex=yBrand(b.id)||yFindBrandExact(b.name);
+    if(!ex){var nb=JSON.parse(JSON.stringify(b));bmap[b.id]=nb.id;chain=chain.then(function(){return ySavePhotosFrom(d,yBrandPhotoIds([nb]));}).then(function(){Y.brands.push(nb);});return;}
+    bmap[b.id]=ex.id;
+    (b.items||[]).forEach(function(it){if(!(ex.items||[]).some(function(x){return x.id===it.id;})){chain=chain.then(function(){return ySavePhotosFrom(d,it.photos||[]);}).then(function(){ex.items=ex.items||[];ex.items.push(it);ex.updated=Math.max(ex.updated||0,it.date||0);});}});
+    (b.menuPhotos||[]).forEach(function(m){if((ex.menuPhotos||[]).indexOf(m)<0){chain=chain.then(function(){return ySavePhotosFrom(d,[m]);}).then(function(){ex.menuPhotos=ex.menuPhotos||[];ex.menuPhotos.push(m);});}});
+  });
   d.places.forEach(function(p){
     var np=Object.assign({},p,{cat:map[p.cat]||p.cat}),o=yPlace(p.id);
+    if(np.brandId)np.brandId=bmap[np.brandId]||np.brandId;
     if(!o){added++;chain=chain.then(function(){return ySavePhotosFrom(d,np.photos||[]);}).then(function(){Y.places.push(np);});}
     else if((p.updated||0)>(o.updated||0)){
       var all=(o.photos||[]).slice();(np.photos||[]).forEach(function(x){if(all.indexOf(x)<0)all.push(x);});np.photos=all;
@@ -1394,8 +1679,9 @@ function yReplace(){
   var old=Y.places.slice();
   var chain=Promise.resolve();
   old.forEach(function(p){(p.photos||[]).forEach(function(ph){chain=chain.then(function(){return yPhotoDel(ph);});});});
+  yBrandPhotoIds(Y.brands).forEach(function(ph){chain=chain.then(function(){return yPhotoDel(ph);});});
   chain.then(function(){return ySavePhotosFrom(d,Object.keys(d.photos||{}));})
-    .then(function(){Y.cats=d.cats;Y.places=d.places;ySave();yPendingImport=null;yCur=null;yClose();yLastScope='';yRender();showSec('places');toast('✅ Yedek yüklendi',3000);})
+    .then(function(){Y.cats=d.cats;Y.places=d.places;Y.brands=d.brands||[];ySave();yPendingImport=null;yCur=null;yClose();yLastScope='';yRender();showSec('places');toast('✅ Yedek yüklendi',3000);})
     .catch(function(){toast('❌ Yükleme tamamlanamadı',3000);});
 }
 
