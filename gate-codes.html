@@ -389,7 +389,7 @@
       <span>⚠️</span>
     </div>
   </div>
-  <div style="text-align:center;padding:20px 0;color:var(--text3);font-size:12px;font-family:var(--mono)">v2.3.0 · ozbekla.github.io</div>
+  <div style="text-align:center;padding:20px 0;color:var(--text3);font-size:12px;font-family:var(--mono)">v2.3.1 · ozbekla.github.io</div>
 </div>
 </div>
 
@@ -1416,7 +1416,7 @@ function yOpenBrand(id,banner){
 function yBrandSheet(id,name,after){
   var b=id?yBrand(id):null;ySheet={type:'brandname',id:id,after:after||null};
   var h='<div class="y-sheet"><div class="y-top"><h3>'+(b?'Mekân adını değiştir':'Yeni mekân')+'</h3><button class="y-x" onclick="yClose()">✕</button></div>';
-  h+='<div><label class="flabel">Mekân adı</label><input class="finput" id="yb-name" value="'+esc(b?b.name:(name||''))+'" placeholder="Örn. Del Taco, Kung Fu Tea"><div class="y-hint" style="margin-top:6px">Şube adı yazma, sadece mekânın adı. Tüm şubeler aynı defterde toplanır.</div></div>';
+  h+='<div><label class="flabel">Mekân adı</label><input class="finput" id="yb-name" list="yb-names" autocomplete="off" value="'+esc(b?b.name:(name||''))+'" placeholder="Yazmaya başla: del → Del Taco">'+yBrandDatalist('yb-names')+'<div class="y-hint" style="margin-top:6px">Şube adı yazma, sadece mekânın adı. Tüm şubeler aynı defterde toplanır.</div></div>';
   h+='<div class="modal-actions" style="padding:6px 0 0"><button class="btn-cancel" onclick="yClose()">İptal</button><button class="btn-save" onclick="ySaveBrand()">'+(b?'Kaydet':'Defteri aç')+'</button></div></div>';
   yOpenSheet(h);
   setTimeout(function(){var i=document.getElementById('yb-name');if(i&&!i.value)i.focus();},200);
@@ -1526,6 +1526,15 @@ function yPlaceFoodBlock(p){
   return '';
 }
 
+
+// ── Mekân adı otomatik tamamlama: kayıtlı mekânlar + bilinen zincirler ──
+var Y_CHAINS=["7-Eleven", "85°C Bakery Cafe", "Arby's", "Auntie Anne's", "Baskin-Robbins", "BCD Tofu House", "Ben & Jerry's", "Blaze Pizza", "Boba Guys", "Bonchon", "Boston Market", "Buffalo Wild Wings", "Burger King", "California Pizza Kitchen", "Carl's Jr.", "Cava", "Cha for Tea", "Cheesecake Factory", "Chi Chi Ramen", "Chick-fil-A", "Chicken Maison", "Chili's", "Chipotle", "Chuck E. Cheese", "Cinnabon", "Coffee Bean & Tea Leaf", "Cold Stone Creamery", "Corner Bakery", "Costco Food Court", "Crumbl Cookies", "Dairy Queen", "Dave's Hot Chicken", "Del Taco", "Denny's", "Din Tai Fung", "Domino's", "Dunkin'", "Dutch Bros", "El Pollo Loco", "El Torito", "Farmer Boys", "Five Guys", "Gen Korean BBQ", "Gong Cha", "Habit Burger", "Hai Di Lao", "Halal Guys", "Happy Lemon", "Hooters", "IHOP", "In-N-Out Burger", "Jack in the Box", "Jamba", "Jersey Mike's", "Jimmy John's", "Joe & The Juice", "KFC", "Krispy Kreme", "Kung Fu Tea", "Kura Sushi", "Lazy Dog", "Little Caesars", "Lollicup", "Machi Machi", "McDonald's", "Mendocino Farms", "Mitsuwa", "Mo' Bettahs", "MOD Pizza", "Nekter Juice Bar", "Noodles & Company", "Nothing Bundt Cakes", "Olive Garden", "Omomo Tea", "Ono Hawaiian BBQ", "Outback Steakhouse", "P.F. Chang's", "Panda Express", "Panera Bread", "Papa John's", "Paris Baguette", "Peet's Coffee", "Philz Coffee", "Pieology", "Pinkberry", "Pizza Hut", "Pollo Campero", "Popeyes", "Raising Cane's", "Red Lobster", "Red Robin", "Rubio's", "Salt & Straw", "Shake Shack", "Sharetea", "Sidecar Doughnuts", "Smashburger", "Sonic", "Sprinkles", "Starbucks", "Subway", "Sugarfish", "Sweetgreen", "Taco Bell", "Tapioca Express", "Tasty Pot", "Teaspoon", "Tender Greens", "The Alley", "The Boiling Crab", "Tiger Sugar", "Tim Hortons", "Tous les Jours", "TP Tea", "Urth Caffé", "Veggie Grill", "Waba Grill", "Wahoo's Fish Taco", "Wendy's", "Wetzel's Pretzels", "Whataburger", "Wingstop", "Xing Fu Tang", "Yard House", "Yi Fang", "Yogurtland", "Yoshinoya", "Zankou Chicken"];
+function yBrandDatalist(id){
+  var seen={},o=[];
+  (Y.brands||[]).slice().sort(function(a,b){return (b.updated||0)-(a.updated||0);}).forEach(function(b){var k=yNorm(b.name);if(!seen[k]){seen[k]=1;o.push(b.name);}});
+  Y_CHAINS.forEach(function(n){var k=yNorm(n);if(!seen[k]){seen[k]=1;o.push(n);}});
+  return '<datalist id="'+id+'">'+o.map(function(n){return '<option value="'+esc(n)+'">';}).join('')+'</datalist>';
+}
 // Buradayım
 function yHere(){
   toast('📍 Konum alınıyor…',4000);
@@ -1546,7 +1555,7 @@ function yHereNew(nm,pos){
   ySheet={type:'here',pos:pos};
   var h='<div class="y-sheet"><div class="y-top"><h3>'+(nm?'Burası: '+esc(nm):'Neredesin?')+'</h3><button class="y-x" onclick="yClose()">✕</button></div>';
   h+='<div style="font-size:14px;line-height:1.5;color:var(--text2)">'+(nm?'Bu mekân için daha önce kayıt yok. İlk kez geliyorsun gibi görünüyor.':'Haritada burada bir mekân adı bulamadım. Adını yazarsan önce eski kayıtlarda ararım, yoksa yeni defter açarım.')+'</div>';
-  h+='<div><label class="flabel">Mekân adı</label><input class="finput" id="yh-name" value="'+esc(nm)+'" placeholder="Örn. Del Taco"></div>';
+  h+='<div><label class="flabel">Mekân adı</label><input class="finput" id="yh-name" list="yh-names" autocomplete="off" value="'+esc(nm)+'" placeholder="Yazmaya başla: del → Del Taco">'+yBrandDatalist('yh-names')+'</div>';
   h+='<label class="y-check" style="accent-color:var(--accent)"><input type="checkbox" id="yh-place" style="accent-color:#00e5a0"><span>Bu şubeyi Yerlerimiz’e de kaydet (konumuyla)</span></label>';
   h+='<div class="modal-actions" style="padding:6px 0 0"><button class="btn-cancel" onclick="yClose()">İptal</button><button class="btn-save" onclick="yHereGo()">🍽 Defteri aç</button></div></div>';
   yOpenSheet(h);
