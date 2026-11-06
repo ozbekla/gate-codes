@@ -91,7 +91,7 @@
   .btn-sm:active{background:var(--surface2);}
   .btn-sm.danger{color:var(--warn);border-color:#ff6b3530;}
 
-  .fab{position:fixed;bottom:calc(var(--navh) + 20px + env(safe-area-inset-bottom));right:20px;z-index:200;width:58px;height:58px;border-radius:20px;background:var(--accent);border:none;color:#000;font-size:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 24px #00e5a040;}
+  .fab{position:fixed;bottom:calc(var(--navh) + 20px + env(safe-area-inset-bottom));right:20px;z-index:200;height:54px;padding:0 20px;gap:6px;font-family:var(--sans);font-weight:700;white-space:nowrap;border-radius:27px;background:var(--accent);border:none;color:#000;font-size:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 24px #00e5a040;}
   .fab:active{transform:scale(.93);}
 
   /* FİLTRE (Hepsi / Kapı / Tuvalet) */
@@ -160,7 +160,11 @@
   .code-row-del{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:4px;}
   .add-code-btn{width:100%;padding:10px;border:1px dashed var(--border);border-radius:10px;background:transparent;color:var(--text3);font-size:13px;cursor:pointer;margin-top:6px;}
 
-  .modal-actions{padding:20px 20px 16px;display:flex;gap:10px;}
+  .modal-actions{padding:14px 20px;display:flex;gap:10px;position:sticky;bottom:calc(-40px - env(safe-area-inset-bottom));margin-bottom:calc(-40px - env(safe-area-inset-bottom));padding-bottom:calc(14px + 40px + env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--border);z-index:5;}
+  .y-sheet .modal-actions{margin-left:-20px;margin-right:-20px;}
+  .modal-actions:not(:last-child){margin-bottom:0;}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 20px 0;}
+  .modal-head .modal-title{padding:0;}
   .btn-cancel{flex:1;padding:14px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:var(--sans);font-size:15px;cursor:pointer;}
   .btn-save{flex:2;padding:14px;border-radius:12px;border:none;background:var(--accent);color:#000;font-family:var(--sans);font-size:15px;font-weight:600;cursor:pointer;}
   .btn-save:disabled{opacity:.35;}
@@ -201,6 +205,9 @@
   /* ── YERLERİMİZ ── */
   .y-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin:18px 2px 8px;display:flex;justify-content:space-between;align-items:center;gap:8px;}
   .y-label button{background:none;border:none;color:var(--accent2);font-family:var(--sans);font-size:12px;text-transform:none;letter-spacing:0;cursor:pointer;}
+  .y-back{display:inline-flex;align-items:center;gap:4px;margin-top:12px;padding:10px 16px 10px 12px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:var(--sans);font-size:15px;font-weight:600;cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .y-back:active{background:var(--surface2);}
+  .y-back.in-sheet{margin:0;align-self:flex-start;padding:8px 14px 8px 10px;font-size:14px;}
   .y-crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:14px;font-size:13px;}
   .y-crumbs button{background:none;border:none;color:var(--accent2);font-family:var(--sans);font-size:13px;font-weight:600;padding:2px;cursor:pointer;}
   .y-crumbs span{color:var(--text3);}
@@ -272,6 +279,11 @@
   #y-vimg{display:block;width:100%;height:auto;margin:auto;}
   #y-viewer.zoom{display:block;}
   #y-viewer.zoom #y-vimg{width:260%;max-width:none;}
+  .y-vnav{position:fixed;top:50%;transform:translateY(-50%);z-index:2;width:44px;height:64px;border:none;border-radius:12px;background:rgba(255,255,255,.12);color:#fff;font-size:34px;line-height:1;cursor:pointer;}
+  .y-vnav.prev{left:8px;} .y-vnav.next{right:8px;}
+  .y-vnav[hidden]{display:none!important;}
+  .y-vbar{position:fixed;left:0;right:0;bottom:0;z-index:2;display:flex;justify-content:space-between;gap:10px;padding:10px 16px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(transparent,rgba(0,0,0,.75));color:#ddd;font-size:12px;pointer-events:none;}
+  .y-photos img{cursor:zoom-in;}
   .y-vclose{position:fixed;top:calc(12px + env(safe-area-inset-top));right:12px;z-index:2;}
   details summary{cursor:pointer;}
 </style>
@@ -391,11 +403,11 @@
       <span>⚠️</span>
     </div>
   </div>
-  <div style="text-align:center;padding:20px 0;color:var(--text3);font-size:12px;font-family:var(--mono)">v2.4.0 · ozbekla.github.io</div>
+  <div style="text-align:center;padding:20px 0;color:var(--text3);font-size:12px;font-family:var(--mono)">v2.5.1 · ozbekla.github.io</div>
 </div>
 </div>
 
-<button class="fab" id="fab" onclick="fabAction()">+</button>
+<button class="fab" id="fab" onclick="fabAction()"><span style="font-size:24px;line-height:1">+</span><span id="fab-lbl" style="font-size:15px">Ekle</span></button>
 
 <nav class="bnav">
   <button id="nav-codes" class="active" onclick="showSec('codes')"><span class="ic">🔑</span>Kapı Kodları</button>
@@ -407,7 +419,7 @@
 <div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title" id="modal-title">Yeni Yer Ekle</div>
+    <div class="modal-head"><div class="modal-title" id="modal-title">Yeni kayıt</div><button class="y-x" onclick="closeModal()" aria-label="Kapat">✕</button></div>
 
     <!-- NE EKLİYORUM: Kapı kodu / Tuvalet -->
     <div class="fsec">
@@ -508,7 +520,7 @@
   <button class="scan-cancel" onclick="cancelScan()">İptal</button>
 </div>
 
-<div id="y-viewer" hidden onclick="this.classList.toggle('zoom')"><button class="y-x y-vclose" onclick="event.stopPropagation();document.getElementById('y-viewer').hidden=true;document.getElementById('y-viewer').classList.remove('zoom')">✕</button><img id="y-vimg" alt=""></div>
+<div id="y-viewer" hidden onclick="this.classList.toggle('zoom')"><button class="y-x y-vclose" onclick="event.stopPropagation();yViewClose()" aria-label="Kapat">✕</button><button class="y-vnav prev" onclick="event.stopPropagation();yViewStep(-1)" aria-label="Önceki">‹</button><button class="y-vnav next" onclick="event.stopPropagation();yViewStep(1)" aria-label="Sonraki">›</button><div class="y-vbar"><span id="y-vcount"></span><span>Dokun: yakınlaştır · Kaydır: sonraki</span></div><img id="y-vimg" alt=""></div>
 <div class="toast" id="toast"></div>
 <input type="file" id="import-input" accept=".json" style="display:none" onchange="handleImport(event)">
 <input type="file" id="y-import" accept=".json,application/json" style="display:none" onchange="yReadImport(event)">
@@ -551,7 +563,7 @@ function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2
 function isWC(l){return l.type==='🚻';}
 function codeFilter(){return settings.codeFilter||'all';}
 function passFilter(l){var f=codeFilter();return f==='all'||(f==='wc'?isWC(l):!isWC(l));}
-function setCodeFilter(f){settings.codeFilter=f;save();applyCodeFilterUI();render(nearbyIds);if(mainMap)fitMapBounds(lastPos&&lastPos.lat,lastPos&&lastPos.lng);}
+function setCodeFilter(f){settings.codeFilter=f;save();applyCodeFilterUI();updateFab();render(nearbyIds);if(mainMap)fitMapBounds(lastPos&&lastPos.lat,lastPos&&lastPos.lng);}
 var curKind='gate';
 function setKind(k){
   curKind=k;
@@ -581,8 +593,15 @@ function showSec(s){
   else if(s==='places'){t.textContent='📍 Yerlerimiz';b.hidden=false;b.textContent='◎ Konumum';yRender();if(yView==='map')yInitMap();if(!lastPos&&!yAutoLocated){yAutoLocated=true;yLocate(true);}}
   else{t.textContent='⚙️ Ayarlar';b.hidden=true;}
   document.getElementById('fab').hidden=(s==='settings');
+  updateFab();
   storeSet('last_sec',s);
   window.scrollTo(0,0);
+}
+function updateFab(){
+  var l='Ekle';
+  if(curSec==='codes')l=codeFilter()==='wc'?'Tuvalet ekle':'Kod ekle';
+  else if(curSec==='places'){if(yView==='food')l='Mekân ekle';else if(yCur&&yCat(yCur)&&yView==='list'&&!yQuery.trim())l='Buraya yer ekle';else l='Yer ekle';}
+  var el=document.getElementById('fab-lbl');if(el)el.textContent=l;
 }
 function hdrAction(){if(curSec==='codes')scanNearby();else if(curSec==='places')yLocate();}
 function fabAction(){if(curSec==='codes')openAdd();else if(curSec==='places'){if(yView==='food')yBrandSheet(null,'');else yStartAdd();}}
@@ -879,7 +898,7 @@ function updateRadiusLabel(step){document.getElementById('f-rval').textContent=s
 // ── MODAL ──────────────────────────────────────────────────
 function openAdd(){
   editingId=null;
-  document.getElementById('modal-title').textContent='Yeni Yer Ekle';
+  document.getElementById('modal-title').textContent='Yeni kayıt';
   ['f-name','f-addr','f-lat','f-lng','f-note'].forEach(function(id){document.getElementById(id).value='';});
   var defStep=settings.defaultRadius||10;
   document.getElementById('f-radius').value=defStep;
@@ -1147,6 +1166,7 @@ function yShowView(v){
   document.getElementById('y-tab-food').classList.toggle('active',v==='food');
   if(v==='map')yInitMap();
   if(v==='food')yRenderFood();
+  updateFab();
 }
 function yRender(){
   document.getElementById('y-sub').textContent=Y.places.length+' yer · '+Y.cats.length+' başlık';
@@ -1169,6 +1189,7 @@ function yRender(){
   yHydrate(el);
   yDrawPins(list,key);
   if(yView==='food')yRenderFood();
+  updateFab();
 }
 function yCatCard(c){var n=yIn(c.id,true).length,subs=yChildren(c.id).length;return '<button class="y-cat" style="--cc:'+yColor(c.id)+'" data-yact="open" data-id="'+c.id+'"><span class="dot"></span><b>'+esc(c.name)+'</b><small>'+n+' yer'+(subs?' · '+subs+' alt başlık':'')+'</small></button>';}
 function yHomeView(){
@@ -1185,7 +1206,9 @@ function yHomeView(){
 }
 function yCatView(id){
   var ch=yChain(id),c=yCat(id);
-  var h='<nav class="y-crumbs"><button data-yact="home">Tümü</button>'+ch.map(function(x,i){return '<span>›</span>'+(i===ch.length-1?'<b>'+esc(yCat(x).name)+'</b>':'<button data-yact="open" data-id="'+x+'">'+esc(yCat(x).name)+'</button>');}).join('')+'</nav>';
+  var par=c.parent&&yCat(c.parent);
+  var h='<button class="y-back" data-yact="up">‹ '+(par?esc(par.name):'Tüm başlıklar')+'</button>';
+  h+='<nav class="y-crumbs"><button data-yact="home">Tümü</button>'+ch.map(function(x,i){return '<span>›</span>'+(i===ch.length-1?'<b>'+esc(yCat(x).name)+'</b>':'<button data-yact="open" data-id="'+x+'">'+esc(yCat(x).name)+'</button>');}).join('')+'</nav>';
   h+='<div class="y-head"><h2 style="color:'+yColor(id)+'">'+esc(c.name)+'</h2><button class="btn-sm" style="flex:none;padding:8px 14px" data-yact="editcat" data-id="'+id+'">✏️ Düzenle</button></div>';
   h+='<div class="y-label">Alt başlıklar</div><div class="y-cats">'+yChildren(id).map(yCatCard).join('')+'<button class="y-cat add" data-yact="newcat" data-parent="'+id+'">+ Alt başlık</button></div>';
   var direct=yIn(id,false),deeper=yIn(id,true).filter(function(p){return p.cat!==id;});
@@ -1238,13 +1261,20 @@ function yLocate(silent){
 }
 
 // ── yer detayı / form / başlık ──
+var yBrandBacks={};
+function yCurSheetRef(){var o=document.getElementById('y-overlay');if(!o.classList.contains('open')||!ySheet)return null;if(ySheet.type==='place'||ySheet.type==='brand')return {type:ySheet.type,id:ySheet.id};return null;}
+function yBackBtn(back){
+  if(!back)return '';
+  var nm=back.type==='place'?(yPlace(back.id)||{}).name:(yBrand(back.id)||{}).name;if(!nm)return '';
+  return '<button class="y-back in-sheet" onclick="'+(back.type==='place'?'yOpenPlace':'yOpenBrand')+'(\''+back.id+'\')">‹ '+esc(nm)+'</button>';
+}
 function yOpenSheet(html){document.getElementById('y-sheet').innerHTML=html;document.getElementById('y-overlay').classList.add('open');document.querySelector('#y-overlay .modal').scrollTop=0;yHydrate(document.getElementById('y-sheet'));}
 function yClose(){if(yFmap){yFmap.remove();yFmap=null;yFmarker=null;}ySheet=null;yDraft=null;document.getElementById('y-overlay').classList.remove('open');document.getElementById('y-sheet').innerHTML='';}
-function yOpenPlace(id){
-  var p=yPlace(id);if(!p)return;ySheet={type:'place',id:id};
+function yOpenPlace(id,back){
+  var p=yPlace(id);if(!p)return;ySheet={type:'place',id:id,back:back||null};
   var L_=yNavLinks(p),order=[Y.set.nav].concat(['google','apple','waze'].filter(function(x){return x!==Y.set.nav;})),d=yDist(p);
-  var h='<div class="y-sheet"><div class="y-top"><div><div class="y-path" style="--cc:'+yColor(p.cat)+'">'+esc(yPath(p.cat))+'</div><h3>'+esc(p.name)+'</h3>'+(d!=null?'<div class="y-dist" style="margin-top:4px">'+fmtDist(d)+' uzakta</div>':'')+'</div><button class="y-x" onclick="yClose()">✕</button></div>';
-  if((p.photos||[]).length)h+='<div class="y-photos">'+p.photos.map(function(id){return '<img data-pid="'+id+'" data-yact="viewphoto" alt="">';}).join('')+'</div>';
+  var h='<div class="y-sheet">'+yBackBtn(back)+'<div class="y-top"><div><div class="y-path" style="--cc:'+yColor(p.cat)+'">'+esc(yPath(p.cat))+'</div><h3>'+esc(p.name)+'</h3>'+(d!=null?'<div class="y-dist" style="margin-top:4px">'+fmtDist(d)+' uzakta</div>':'')+'</div><button class="y-x" onclick="yClose()">✕</button></div>';
+  if((p.photos||[]).length)h+='<div class="y-photos">'+p.photos.map(function(id){return '<img data-pid="'+id+'" data-yact="viewphoto" alt="">';}).join('')+'</div><div class="y-hint" style="margin-top:-8px">🔍 Büyütmek için fotoğrafa dokun</div>';
   if(p.note)h+='<div class="y-note">'+esc(p.note)+'</div>';
   h+=yPlaceFoodBlock(p);
   if(p.address)h+='<div><div class="flabel">Adres</div><div style="font-size:14px;line-height:1.5">'+esc(p.address)+'</div></div>';
@@ -1267,7 +1297,7 @@ function yEdit(id){var p=yPlace(id);if(!p)return;yDraft=Object.assign({},p,{phot
 function yStatus(msg,cls){var el=document.getElementById('yf-status');if(el){el.textContent=msg;el.className='loc-status'+(cls?' '+cls:'');}}
 function yFormSheet(){
   var f=yDraft;ySheet={type:'form'};
-  var h='<div class="modal-title">'+(f.id?'Yeri düzenle':'Yeni yer')+'</div>';
+  var h='<div class="modal-head"><div class="modal-title">'+(f.id?'Yeri düzenle':'Yeni yer')+'</div><button class="y-x" onclick="'+(f.id?'yOpenPlace(\''+f.id+'\')':'yClose()')+'" aria-label="Kapat">✕</button></div>';
   h+='<div class="map-wrap"><div id="yf-map"></div><div class="map-hint">📌 Haritaya dokun ya da pini sürükle</div></div>';
   h+='<div class="fsec"><div class="gps-row"><button class="gps-btn primary" onclick="yRegeo()">📍 Konumumu al</button></div><div class="loc-status'+(f.lat!=null?' ok':'')+'" id="yf-status">'+(f.lat!=null?'✅ Konum kayıtlı · pini sürükleyerek düzeltebilirsin':'')+'</div></div>';
   h+='<div class="fsec"><label class="flabel">Adres ara ya da Google Maps linki yapıştır</label><div class="addr-row"><input type="text" class="finput" id="yf-search" placeholder="123 Main St, Irvine…" onkeydown="if(event.key===\'Enter\'){event.preventDefault();ySearch()}"><button class="addr-search-btn" onclick="ySearch()">🔍</button></div><div class="addr-results" id="yf-results"></div></div>';
@@ -1343,7 +1373,7 @@ function ySearch(){
 }
 function yRenderFormPhotos(){
   var el=document.getElementById('yf-photos');if(!el)return;
-  el.innerHTML=yDraft.photos.map(function(id,i){return '<span class="y-ph"><img data-pid="'+id+'" alt=""><button onclick="yRmPhoto('+i+')">×</button></span>';}).join('');
+  el.innerHTML=yDraft.photos.map(function(id,i){return '<span class="y-ph"><img data-pid="'+id+'" data-yact="viewphoto" alt=""><button onclick="yRmPhoto('+i+')">×</button></span>';}).join('');
   yHydrate(el);
 }
 function yRmPhoto(i){yDraft.photos.splice(i,1);yRenderFormPhotos();}
@@ -1395,7 +1425,7 @@ function yCatSheet(id,parent){
   var h='<div class="y-sheet"><div class="y-top"><h3>'+(c?'Başlığı düzenle':(parent?'“'+esc(yCat(parent).name)+'” altına başlık':'Yeni başlık'))+'</h3><button class="y-x" onclick="yClose()">✕</button></div>';
   h+='<div><label class="flabel">Başlık adı</label><input class="finput" id="yc-name" value="'+esc(c?c.name:'')+'" placeholder="Örn. Sağlık"></div>';
   if(isRoot)h+='<div><label class="flabel">Renk</label><div class="y-colors">'+Y_COLORS.map(function(v){return '<label><input type="radio" name="yc-color" value="'+v+'"'+(v===cur?' checked':'')+'><span style="background:'+v+'"></span></label>';}).join('')+'</div></div>';
-  h+='<div class="modal-actions" style="padding:6px 0 0"><button class="btn-cancel" onclick="yClose()">İptal</button><button class="btn-save" onclick="ySaveCat()">Kaydet</button></div>';
+  h+='<div class="modal-actions"><button class="btn-cancel" onclick="yClose()">İptal</button><button class="btn-save" onclick="ySaveCat()">Kaydet</button></div>';
   if(c)h+='<button class="btn-sm danger" style="flex:none;padding:12px" data-yact="delcat" data-id="'+c.id+'">🗑 Başlığı sil</button>';
   h+='</div>';
   yOpenSheet(h);
@@ -1418,8 +1448,9 @@ document.addEventListener('click',function(e){
   var t=e.target.closest('[data-yact]');if(!t)return;
   var a=t.getAttribute('data-yact'),id=t.getAttribute('data-id');
   if(a==='open'){yCur=id;yQuery='';yRender();window.scrollTo(0,0);}
+  else if(a==='up'){var cc=yCat(yCur);yCur=cc?(cc.parent||null):null;yRender();window.scrollTo(0,0);}
   else if(a==='home'){yCur=null;yRender();}
-  else if(a==='place')yOpenPlace(id);
+  else if(a==='place')yOpenPlace(id,yCurSheetRef());
   else if(a==='edit')yEdit(id);
   else if(a==='showmap'){var p=yPlace(id);yClose();yShowView('map');if(p&&yHasLL(p))setTimeout(function(){yMap.setView([p.lat,p.lng],17);},150);}
   else if(a==='delplace')yDeletePlace(id);
@@ -1484,10 +1515,10 @@ function yBrandRow(b,qn){
 }
 
 // mekân sayfası
-function yOpenBrand(id,banner){
-  var b=yBrand(id);if(!b)return;ySheet={type:'brand',id:id};
+function yOpenBrand(id,banner,back){
+  var b=yBrand(id);if(!b)return;if(back===undefined)back=yBrandBacks[id]||null;else yBrandBacks[id]=back;ySheet={type:'brand',id:id,back:back||null};
   var items=yItemsSorted(b),br=yBranches(b);
-  var h='<div class="y-sheet">'+(banner?'<div class="y-ok"><b style="color:var(--accent)">'+banner+'</b></div>':'');
+  var h='<div class="y-sheet">'+yBackBtn(back)+(banner?'<div class="y-ok"><b style="color:var(--accent)">'+banner+'</b></div>':'');
   h+='<div class="y-top"><div><div class="y-path" style="--cc:#ffb020">🍽 Lezzetler</div><h3>'+esc(b.name)+'</h3><div class="y-hint">'+items.length+' deneme</div></div><button class="y-x" onclick="yClose()">✕</button></div>';
   h+='<button class="btn-save" style="flex:none" data-yact="additem" data-id="'+b.id+'">+ Denediğimizi ekle</button>';
   if(items.length){
@@ -1508,7 +1539,7 @@ function yBrandSheet(id,name,after){
   var b=id?yBrand(id):null;ySheet={type:'brandname',id:id,after:after||null};
   var h='<div class="y-sheet"><div class="y-top"><h3>'+(b?'Mekân adını değiştir':'Yeni mekân')+'</h3><button class="y-x" onclick="yClose()">✕</button></div>';
   h+='<div><label class="flabel">Mekân adı</label><input class="finput" id="yb-name" list="yb-names" autocomplete="off" value="'+esc(b?b.name:(name||''))+'" placeholder="Yazmaya başla: del → Del Taco">'+yBrandDatalist('yb-names')+'<div class="y-hint" style="margin-top:6px">Şube adı yazma, sadece mekânın adı. Tüm şubeler aynı defterde toplanır.</div></div>';
-  h+='<div class="modal-actions" style="padding:6px 0 0"><button class="btn-cancel" onclick="yClose()">İptal</button><button class="btn-save" onclick="ySaveBrand()">'+(b?'Kaydet':'Defteri aç')+'</button></div></div>';
+  h+='<div class="modal-actions"><button class="btn-cancel" onclick="yClose()">İptal</button><button class="btn-save" onclick="ySaveBrand()">'+(b?'Kaydet':'Defteri aç')+'</button></div></div>';
   yOpenSheet(h);
   setTimeout(function(){var i=document.getElementById('yb-name');if(i&&!i.value)i.focus();},200);
 }
@@ -1553,7 +1584,7 @@ function yItemForm(bid,iid){
   h+='<div><label class="flabel">Nasıldı?</label><div class="y-starbar" id="yi-stars">'+[1,2,3,4,5].map(function(v){return '<button type="button" data-yact="star" data-v="'+v+'">★</button>';}).join('')+'</div><div class="y-hint" id="yi-starlbl"></div></div>';
   h+='<div><label class="flabel">Not</label><textarea class="ftextarea" id="yi-note" style="min-height:70px" placeholder="Az buzlu iste, büyük boy al, çok tatlıydı…">'+esc(yItemDraft.note)+'</textarea></div>';
   h+='<div><label class="flabel">Fotoğraf</label><div class="y-photos small" id="yi-photos"></div><div class="y-photo-btns" style="margin-top:8px"><label>📷 Fotoğraf çek<input type="file" accept="image/*" capture="environment" hidden onchange="yAddItemPhotos(this)"></label><label>🖼 Galeriden<input type="file" accept="image/*" multiple hidden onchange="yAddItemPhotos(this)"></label></div></div>';
-  h+='<div class="modal-actions" style="padding:6px 0 0"><button class="btn-cancel" onclick="yOpenBrand(\''+bid+'\')">İptal</button><button class="btn-save" onclick="ySaveItem()">Kaydet</button></div>';
+  h+='<div class="modal-actions"><button class="btn-cancel" onclick="yOpenBrand(\''+bid+'\')">İptal</button><button class="btn-save" onclick="ySaveItem()">Kaydet</button></div>';
   if(it)h+='<button class="btn-sm danger" style="flex:none;padding:12px" data-yact="delitem">🗑 Bu denemeyi sil</button>';
   h+='</div>';
   yOpenSheet(h);
@@ -1568,7 +1599,7 @@ function ySetStars(v){
 }
 function yRenderItemPhotos(){
   var el=document.getElementById('yi-photos');if(!el)return;
-  el.innerHTML=yItemDraft.photos.map(function(id,i){return '<span class="y-ph"><img data-pid="'+id+'" alt=""><button onclick="yItemDraft.photos.splice('+i+',1);yRenderItemPhotos()">×</button></span>';}).join('');
+  el.innerHTML=yItemDraft.photos.map(function(id,i){return '<span class="y-ph"><img data-pid="'+id+'" data-yact="viewphoto" alt=""><button onclick="yItemDraft.photos.splice('+i+',1);yRenderItemPhotos()">×</button></span>';}).join('');
   yHydrate(el);
 }
 function yStorePhotos(files){
@@ -1648,7 +1679,7 @@ function yHereNew(nm,pos){
   h+='<div style="font-size:14px;line-height:1.5;color:var(--text2)">'+(nm?'Bu mekân için daha önce kayıt yok. İlk kez geliyorsun gibi görünüyor.':'Haritada burada bir mekân adı bulamadım. Adını yazarsan önce eski kayıtlarda ararım, yoksa yeni defter açarım.')+'</div>';
   h+='<div><label class="flabel">Mekân adı</label><input class="finput" id="yh-name" list="yh-names" autocomplete="off" value="'+esc(nm)+'" placeholder="Yazmaya başla: del → Del Taco">'+yBrandDatalist('yh-names')+'</div>';
   h+='<label class="y-check" style="accent-color:var(--accent)"><input type="checkbox" id="yh-place" style="accent-color:#00e5a0"><span>Bu şubeyi Yerlerimiz’e de kaydet (konumuyla)</span></label>';
-  h+='<div class="modal-actions" style="padding:6px 0 0"><button class="btn-cancel" onclick="yClose()">İptal</button><button class="btn-save" onclick="yHereGo()">🍽 Defteri aç</button></div></div>';
+  h+='<div class="modal-actions"><button class="btn-cancel" onclick="yClose()">İptal</button><button class="btn-save" onclick="yHereGo()">🍽 Defteri aç</button></div></div>';
   yOpenSheet(h);
 }
 function yHereGo(){
@@ -1658,15 +1689,36 @@ function yHereGo(){
   yRender();
   if(addPlace)yAddBranch(b.id,pos);else yOpenBrand(b.id);
 }
-function yViewPhoto(pid){
-  var v=document.getElementById('y-viewer'),img=document.getElementById('y-vimg');
-  img.src=yUrls[pid]||'';v.classList.remove('zoom');v.hidden=false;v.scrollTop=0;
-  if(!yUrls[pid])yPhotoGet(pid).then(function(r){if(r&&r.blob){yUrls[pid]=URL.createObjectURL(r.blob);img.src=yUrls[pid];}});
+var yVList=[],yVIdx=0;
+function yViewPhoto(pid,list){
+  yVList=(list&&list.length)?list:[pid];yVIdx=Math.max(0,yVList.indexOf(pid));
+  document.getElementById('y-viewer').hidden=false;yViewShow();
 }
+function yViewShow(){
+  var v=document.getElementById('y-viewer'),img=document.getElementById('y-vimg'),pid=yVList[yVIdx];
+  v.classList.remove('zoom');v.scrollTop=0;v.scrollLeft=0;
+  img.src=yUrls[pid]||'';
+  if(!yUrls[pid])yPhotoGet(pid).then(function(r){if(r&&r.blob){yUrls[pid]=URL.createObjectURL(r.blob);if(yVList[yVIdx]===pid)img.src=yUrls[pid];}});
+  var many=yVList.length>1;
+  document.getElementById('y-vcount').textContent=many?(yVIdx+1)+' / '+yVList.length:'';
+  v.querySelectorAll('.y-vnav').forEach(function(b){b.hidden=!many;});
+}
+function yViewStep(d){if(yVList.length<2)return;yVIdx=(yVIdx+d+yVList.length)%yVList.length;yViewShow();}
+function yViewClose(){var v=document.getElementById('y-viewer');v.hidden=true;v.classList.remove('zoom');}
+(function(){
+  var v=document.getElementById('y-viewer'),sx=0,sy=0;
+  v.addEventListener('touchstart',function(e){var t=e.touches[0];sx=t.clientX;sy=t.clientY;},{passive:true});
+  v.addEventListener('touchend',function(e){
+    if(v.classList.contains('zoom'))return;
+    var t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;
+    if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)){yViewStep(dx<0?1:-1);e.preventDefault();}
+    else if(dy>90&&Math.abs(dy)>Math.abs(dx)){yViewClose();e.preventDefault();}
+  });
+})();
 
 // Lezzetler tıklamaları
 function yFoodClick(a,id,t){
-  if(a==='brand'){yOpenBrand(id);return true;}
+  if(a==='brand'){yOpenBrand(id,null,yCurSheetRef());return true;}
   if(a==='newbrand'){yBrandSheet(null,t.getAttribute('data-name')||'');return true;}
   if(a==='additem'){yItemForm(id,null);return true;}
   if(a==='edititem'){yItemForm(id,t.getAttribute('data-item'));return true;}
@@ -1676,7 +1728,7 @@ function yFoodClick(a,id,t){
   if(a==='delbrand'){yDeleteBrand(id);return true;}
   if(a==='addbranch'){yAddBranch(id,null);return true;}
   if(a==='brandfromplace'){var p=yPlace(id);if(!p)return true;var b=yFindBrandByName(p.name)||yEnsureBrand(p.name);p.brandId=b.id;ySave();yOpenBrand(b.id);return true;}
-  if(a==='viewphoto'){yViewPhoto(t.getAttribute('data-pid'));return true;}
+  if(a==='viewphoto'){var box=t.closest('.y-photos'),lst=box?[].map.call(box.querySelectorAll('img[data-pid]'),function(i){return i.getAttribute('data-pid');}):null;yViewPhoto(t.getAttribute('data-pid'),lst);return true;}
   return false;
 }
 
