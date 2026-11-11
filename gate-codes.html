@@ -104,6 +104,12 @@
   .map-legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
 
   .kind-toggle{display:flex;gap:8px;}
+  .apply-all{display:flex;align-items:center;gap:10px;margin-top:12px;}
+  .apply-all .y-check{flex:1;}
+  .apply-all .btn-sm{flex:none;padding:9px 16px;}
+  .apply-all .btn-sm:disabled{opacity:.35;}
+  .apply-all .btn-sm:not(:disabled){background:var(--accent);border-color:var(--accent);color:#000;font-weight:700;}
+  #apply-all-status{margin-top:8px;}
   .add-code-btn.paste-open{border-style:solid;border-color:#0099ff66;color:#4da3ff;background:#0099ff10;font-weight:600;}
   #paste-box{margin-top:8px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);}
   .kind-toggle button{flex:1;padding:14px 6px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-family:var(--sans);font-size:15px;font-weight:600;cursor:pointer;}
@@ -355,6 +361,11 @@
         <div class="settings-row-label">Varsayılan Mesafe: <span id="default-radius-label" style="color:var(--accent);font-family:var(--mono)">300 ft</span></div>
         <div class="settings-row-sub">Yeni kayıtlarda önerilen eşik</div>
         <input type="range" class="rslider" min="1" max="20" step="1" id="default-radius-slider" value="10" oninput="updateDefaultRadius(this.value)" style="margin-top:8px;width:100%">
+        <div class="apply-all">
+          <label class="y-check"><input type="checkbox" id="apply-all-cb" onchange="updateApplyAll()" style="accent-color:#00e5a0"><span id="apply-all-txt">Tüm mevcut kayıtlara da uygula</span></label>
+          <button class="btn-sm" id="apply-all-btn" disabled onclick="applyRadiusToAll()">Uygula</button>
+        </div>
+        <div class="settings-row-sub" id="apply-all-status"></div>
       </div>
     </div>
     <div class="settings-row" style="flex-direction:column;align-items:stretch">
@@ -403,7 +414,7 @@
       <span>⚠️</span>
     </div>
   </div>
-  <div style="text-align:center;padding:20px 0;color:var(--text3);font-size:12px;font-family:var(--mono)">v2.5.1 · ozbekla.github.io</div>
+  <div style="text-align:center;padding:20px 0;color:var(--text3);font-size:12px;font-family:var(--mono)">v2.6.0 · ozbekla.github.io</div>
 </div>
 </div>
 
@@ -582,6 +593,7 @@ function copyText(t){if(navigator.clipboard&&navigator.clipboard.writeText){navi
 // ── SECTIONS (alt menü) ────────────────────────────────────
 function showSec(s){
   curSec=s;
+  if(s==='settings'){updateApplyAll();var st=document.getElementById('apply-all-status');if(st&&!radiusUndo)st.textContent='';}
   ['codes','places','settings'].forEach(function(x){
     document.getElementById('sec-'+x).hidden=(x!==s);
     document.getElementById('nav-'+x).classList.toggle('active',x===s);
@@ -1064,7 +1076,30 @@ function setUnit(u){
   if(fStep)document.getElementById('f-rval').textContent=stepLabel(parseInt(fStep));
   save();render(nearbyIds);yApplySettings();
 }
-function updateDefaultRadius(v){settings.defaultRadius=parseInt(v);document.getElementById('default-radius-label').textContent=stepLabel(parseInt(v));save();}
+function updateDefaultRadius(v){settings.defaultRadius=parseInt(v);document.getElementById('default-radius-label').textContent=stepLabel(parseInt(v));save();updateApplyAll();}
+// ── Varsayılan mesafeyi tüm kayıtlara uygula (geri alınabilir) ──
+var radiusUndo=null;
+function updateApplyAll(){
+  var cb=document.getElementById('apply-all-cb');if(!cb)return;
+  var m=stepToM(settings.defaultRadius||10),n=locations.filter(function(l){return Math.abs((l.radiusM||stepToM(l.radius||10))-m)>0.5;}).length;
+  document.getElementById('apply-all-txt').textContent='Tüm mevcut kayıtlara da uygula ('+n+' kayıt değişecek → '+fmtDist(m)+')';
+  document.getElementById('apply-all-btn').disabled=!cb.checked||!n;
+}
+function applyRadiusToAll(){
+  var m=stepToM(settings.defaultRadius||10),prev={},n=0;
+  locations.forEach(function(l){var cur=l.radiusM||stepToM(l.radius||10);if(Math.abs(cur-m)>0.5){prev[l.id]=cur;l.radiusM=m;n++;}});
+  if(!n)return;
+  radiusUndo=prev;save();render(nearbyIds);
+  document.getElementById('apply-all-cb').checked=false;updateApplyAll();
+  document.getElementById('apply-all-status').innerHTML='<span style="color:var(--accent)">✅ '+n+' kaydın mesafesi '+fmtDist(m)+' yapıldı.</span> <button class="btn-sm" style="display:inline-flex;flex:none;padding:5px 12px;margin-left:6px" onclick="undoRadiusAll()">↩ Geri al</button>';
+  toast('✅ '+n+' kayıt güncellendi');
+}
+function undoRadiusAll(){
+  if(!radiusUndo)return;var n=0;
+  locations.forEach(function(l){if(radiusUndo[l.id]!=null){l.radiusM=radiusUndo[l.id];n++;}});
+  radiusUndo=null;save();render(nearbyIds);updateApplyAll();
+  document.getElementById('apply-all-status').textContent='↩ '+n+' kaydın eski mesafesi geri yüklendi.';toast('↩ Geri alındı');
+}
 function applySettings(){
   document.getElementById('toggle-autoscan').classList.toggle('on',settings.autoscan);
   document.getElementById('unit-btn-imperial').classList.toggle('active',settings.unit==='imperial');
