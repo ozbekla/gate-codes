@@ -104,6 +104,31 @@
   .map-legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
 
   .kind-toggle{display:flex;gap:8px;}
+  .quick-row{display:flex;gap:8px;margin-bottom:10px;}
+  .quick-btn{flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:12px 14px;border-radius:14px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:var(--sans);cursor:pointer;}
+  .quick-btn b{font-size:15px;font-weight:700;}
+  .quick-btn small{font-size:11px;color:var(--text3);line-height:1.35;}
+  .quick-btn.main{background:linear-gradient(135deg,#00e5a022,#0099ff14);border-color:var(--accent);}
+  .quick-btn.main b{color:var(--accent);}
+  .quick-btn:active{opacity:.75;}
+  .pending-banner{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;padding:13px 16px;border-radius:14px;border:1px solid #ffb02088;background:#ffb02012;color:#ffb020;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;text-align:left;}
+  .p-item{display:flex;gap:12px;align-items:center;padding:10px;border:1px solid var(--border);border-radius:12px;background:var(--bg);}
+  .p-item img,.p-item .noimg{width:54px;height:96px;object-fit:cover;object-position:top;border-radius:8px;flex-shrink:0;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:20px;}
+  .p-item .y-txt{gap:4px;}
+  .p-actions{display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
+  .p-actions .btn-sm{flex:none;padding:8px 12px;}
+  .p-actions .go{background:var(--accent);color:#000;border-color:var(--accent);font-weight:700;}
+  .scan-like{display:none;position:fixed;inset:0;z-index:800;background:var(--bg);align-items:center;justify-content:center;flex-direction:column;gap:16px;text-align:center;padding:40px;}
+  .scan-like.show{display:flex;}
+  #f-shot .shot-row{display:flex;gap:12px;align-items:center;padding:10px;border:1px dashed #ffb02088;border-radius:12px;background:#ffb0200d;}
+  #f-shot img{width:48px;height:86px;object-fit:cover;object-position:top;border-radius:8px;cursor:zoom-in;}
+  #f-shot .y-photos{flex-shrink:0;}
+  .p-item .y-photos img,#f-shot .y-photos img{min-width:0;max-width:none;}
+  .p-item .y-photos img{width:54px;height:96px;}
+  #f-shot .y-photos img{width:48px;height:86px;}
+  .map-wrap{isolation:isolate;}
+  .loc-warn{margin-top:6px;font-size:12px;color:#ffb020;line-height:1.5;}
+  .loc-warn button{margin-left:6px;background:none;border:1px solid #ffb02088;color:#ffb020;border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;}
   .apply-all{display:flex;align-items:center;gap:10px;margin-top:12px;}
   .apply-all .y-check{flex:1;}
   .apply-all .btn-sm{flex:none;padding:9px 16px;}
@@ -317,7 +342,14 @@
     <button data-f="gate" onclick="setCodeFilter('gate')">🔑 Kapı</button>
     <button data-f="wc" onclick="setCodeFilter('wc')">🚻 Tuvalet</button>
   </div>
-  <div class="content" id="tab-locations"><div id="locations-list"></div></div>
+  <div class="content" id="tab-locations">
+    <div class="quick-row">
+      <button class="quick-btn main" onclick="quickMark()"><b>⚡ Hızlı kayıt</b><small>Konumu al + ekran görüntüsü seç</small></button>
+      <button class="quick-btn" onclick="shotOnly()"><b>📷 Görüntüden ekle</b><small>Adresi okuyup konumu bulur</small></button>
+    </div>
+    <div id="pending-banner"></div>
+    <div id="locations-list"></div>
+  </div>
   <div id="tab-map">
     <div id="main-map"></div>
     <div class="map-legend"><span><i style="background:#ff6b35"></i>Kapı</span><span><i style="background:#4da3ff"></i>Tuvalet</span><span><i style="background:#00e5a0"></i>Yakında</span></div>
@@ -414,7 +446,7 @@
       <span>⚠️</span>
     </div>
   </div>
-  <div style="text-align:center;padding:20px 0;color:var(--text3);font-size:12px;font-family:var(--mono)">v2.6.0 · ozbekla.github.io</div>
+  <div style="text-align:center;padding:20px 0;color:var(--text3);font-size:12px;font-family:var(--mono)">v2.7.0 · ozbekla.github.io</div>
 </div>
 </div>
 
@@ -440,6 +472,7 @@
         <button type="button" data-k="wc" onclick="setKind('wc')">🚻 Tuvalet şifresi</button>
       </div>
     </div>
+    <div class="fsec" id="f-shot" hidden></div>
 
     <!-- ADDRESS FIRST -->
     <div class="fsec">
@@ -503,6 +536,7 @@
         <textarea class="ftextarea" id="f-paste" style="min-height:90px" placeholder="Ekran görüntüsünden ya da mesajdan kopyaladığın metnin tamamını buraya yapıştır…"></textarea>
         <label class="y-check" style="margin-top:8px"><input type="checkbox" id="f-paste-note" checked style="accent-color:#00e5a0"><span>Metnin temiz halini Not’a da ekle</span></label>
         <button class="gps-btn primary" style="width:100%;margin-top:8px" onclick="runExtract()">✨ Kodları ayıkla</button>
+        <button class="gps-btn" style="width:100%;margin-top:8px" onclick="document.getElementById('shot-form-input').click()">📷 Ya da ekran görüntüsünü seç, okusun</button>
         <div class="loc-status" id="paste-status"></div>
       </div>
     </div>
@@ -533,6 +567,15 @@
 
 <div id="y-viewer" hidden onclick="this.classList.toggle('zoom')"><button class="y-x y-vclose" onclick="event.stopPropagation();yViewClose()" aria-label="Kapat">✕</button><button class="y-vnav prev" onclick="event.stopPropagation();yViewStep(-1)" aria-label="Önceki">‹</button><button class="y-vnav next" onclick="event.stopPropagation();yViewStep(1)" aria-label="Sonraki">›</button><div class="y-vbar"><span id="y-vcount"></span><span>Dokun: yakınlaştır · Kaydır: sonraki</span></div><img id="y-vimg" alt=""></div>
 <div class="toast" id="toast"></div>
+<input type="file" id="quick-input" accept="image/*" style="display:none" onchange="quickPicked(this)">
+<input type="file" id="shot-input" accept="image/*" style="display:none" onchange="shotPicked(this)">
+<input type="file" id="shot-form-input" accept="image/*" style="display:none" onchange="shotFormPicked(this)">
+<div id="ocr-overlay" class="scan-like">
+  <div class="scan-ring"></div>
+  <div style="font-size:18px;font-weight:600" id="ocr-title">Ekran görüntüsü okunuyor</div>
+  <div style="font-size:13px;color:var(--text3);line-height:1.6;margin-top:4px" id="ocr-sub">Hazırlanıyor…</div>
+  <button class="scan-cancel" onclick="ocrCancel()">İptal</button>
+</div>
 <input type="file" id="import-input" accept=".json" style="display:none" onchange="handleImport(event)">
 <input type="file" id="y-import" accept=".json,application/json" style="display:none" onchange="yReadImport(event)">
 
@@ -952,7 +995,7 @@ function openEdit(id){
   document.querySelector('#modal-overlay .modal').scrollTop=0;
   setTimeout(function(){initMap(loc.lat||null,loc.lng||null);},200);
 }
-function closeModal(){document.getElementById('modal-overlay').classList.remove('open');document.getElementById('addr-results').style.display='none';}
+function closeModal(){pendingCompleting=null;document.getElementById('f-shot').hidden=true;document.getElementById('f-shot').innerHTML='';var lw=document.getElementById('loc-warn');if(lw)lw.remove();document.getElementById('modal-overlay').classList.remove('open');document.getElementById('addr-results').style.display='none';}
 function handleOverlayClick(e){if(e.target===document.getElementById('modal-overlay'))closeModal();}
 
 function addCodeRow(data){
@@ -976,7 +1019,7 @@ function saveLocation(){
   var loc={id:editingId||uid(),name:name,addr:document.getElementById('f-addr').value.trim(),lat:parseFloat(document.getElementById('f-lat').value)||null,lng:parseFloat(document.getElementById('f-lng').value)||null,radiusM:stepToM(step),type:curKind==='wc'?'🚻':document.getElementById('f-type').value,note:document.getElementById('f-note').value.trim(),codes:codes,updatedAt:Date.now()};
   if(editingId){for(var i=0;i<locations.length;i++){if(locations[i].id===editingId){locations[i]=loc;break;}}}
   else locations.push(loc);
-  save();render(nearbyIds);closeModal();toast(editingId?'✅ Güncellendi':'✅ Kaydedildi');
+  save();if(pendingCompleting)removePending(pendingCompleting);render(nearbyIds);closeModal();toast(editingId?'✅ Güncellendi':'✅ Kaydedildi');
 }
 function deleteLocation(id){
   if(!confirm('Bu kaydı silmek istediğine emin misin?'))return;
@@ -998,7 +1041,7 @@ function cleanPasted(t){
   t=t.replace(/[ ]{2,}/g,' ').replace(/\n{3,}/g,'\n\n').trim();
   return t;
 }
-var CODE_LABELS=[[/call\s*-?\s*box|callbox|intercom|buzz/i,'Call box'],[/main\s+gate|front\s+gate/i,'Main gate'],[/(pedestrian|walk)(\s+gate)?/i,'Pedestrian gate'],[/(garage|parking)(\s+gate|\s+door)?/i,'Garage'],[/gate/i,'Gate'],[/lobby/i,'Lobby'],[/elevator/i,'Elevator'],[/mail|package|parcel|locker/i,'Mail / locker'],[/pool/i,'Pool'],[/building|bldg/i,'Building'],[/door|entry|entrance/i,'Door'],[/key\s*box|lock\s*box|lockbox/i,'Lockbox']];
+var CODE_LABELS=[[/call\s*-?\s*box|callbox|intercom|buzz/i,'Call box'],[/main\s+gate|front\s+gate/i,'Main gate'],[/(pedestrian|walk)(\s+gate)?/i,'Pedestrian gate'],[/(garage|parking)(\s+gate|\s+door)?/i,'Garage'],[/\bgate/i,'Gate'],[/lobby/i,'Lobby'],[/elevator/i,'Elevator'],[/mail|package|parcel|locker/i,'Mail / locker'],[/pool/i,'Pool'],[/building|bldg/i,'Building'],[/door|entry|entrance/i,'Door'],[/key\s*box|lock\s*box|lockbox/i,'Lockbox']];
 var STREET_RE=/^\s*[A-Za-z0-9 .']{0,25}\b(st|street|ave|avenue|dr|drive|rd|road|blvd|boulevard|ln|lane|way|ct|court|pl|place|pkwy|parkway|cir|circle|ter|terrace|trl|trail|hwy)\b/i;
 function extractCodes(text){
   var t=cleanPasted(text),out=[],seen={};
@@ -1010,7 +1053,7 @@ function extractCodes(text){
       var before=line.slice(Math.max(0,start-30),start),after=line.slice(end);
       if(/\d[\s\-.()]*$/.test(before.slice(-4))&&/[-.()]/.test(before.slice(-3)+'x'))continue;      // telefonun parçası (949-555-…)
       if(/\d\s*$/.test(before.slice(-2)))continue;                                                   // daha uzun bir sayının parçası
-      if(/^[\-.)]?\s?\d/.test(after)||/^[\-.)]/.test(after))continue;                              // 949-…, (949)
+      if(/^[\-.)]?\s?\d/.test(after)||/^[\-)]/.test(after)||/^\.\d/.test(after))continue;                              // 949-…, (949)
       if(/\b(apt|apartment|unit|suite|ste|room|rm|space|spc)\.?\s*#?\s*$/i.test(before))continue;  // daire no
       if(/\b[A-Z]{2}\s*$/.test(before)&&/^\d{5}$/.test(code))continue;                              // CA 92618
       if(/^\d{5}(-\d{4})?$/.test(code)&&/,\s*$/.test(before))continue;                               // , 92618
@@ -1064,6 +1107,262 @@ document.addEventListener('paste',function(e){
   if(codes.length>1)fillCodes(codes.slice(1));
   toast('✨ '+codes.length+' kod ayıklandı',2500);
 });
+
+// ══════════════════════════════════════════════════════════
+// ── ⚡ HIZLI KAYIT + EKRAN GÖRÜNTÜSÜ OKUMA ─────────────────
+// Sahada: tek dokunuş → GPS noktası + ekran görüntüsü "Bekleyenler"e.
+// Sonra: ekran görüntüsü okunur (OCR, telefonun içinde), kodlar/adres/talimat
+// ayıklanır, form doldurulmuş açılır. GPS yoksa adres haritada bulunur.
+// ══════════════════════════════════════════════════════════
+var pending=[],pendingCompleting=null,quickCtx=null;
+function pLoad(){try{pending=JSON.parse(storeGet('gate_pending')||'[]')||[];}catch(e){pending=[];}}
+function pSave(){storeSet('gate_pending',JSON.stringify(pending));}
+function renderPending(){
+  var el=document.getElementById('pending-banner');if(!el)return;
+  el.innerHTML=pending.length?'<button class="pending-banner" onclick="openPending()"><span>⏳ Tamamlanmayı bekleyen <b>'+pending.length+'</b> kayıt</span><span>Tamamla ›</span></button>':'';
+}
+function pTime(ts){
+  var d=new Date(ts),now=new Date(),hm=d.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
+  if(d.toDateString()===now.toDateString())return 'Bugün '+hm;
+  var y=new Date(now);y.setDate(now.getDate()-1);if(d.toDateString()===y.toDateString())return 'Dün '+hm;
+  return d.toLocaleDateString('tr-TR',{day:'numeric',month:'short'})+' '+hm;
+}
+
+// Sahada: ⚡ Hızlı kayıt
+function quickMark(){
+  var q={id:uid(),t:Date.now(),lat:null,lng:null,acc:null,photo:null,gps:'wait'};
+  quickCtx=q;
+  var inp=document.getElementById('quick-input');
+  inp.oncancel=function(){quickPicked(inp,true);};
+  inp.click(); // galeriyi aynı dokunuşta aç
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(function(p){
+      q.lat=p.coords.latitude;q.lng=p.coords.longitude;q.acc=Math.round(p.coords.accuracy);q.gps='ok';lastPos={lat:q.lat,lng:q.lng};
+      if(q.saved){pSave();renderPending();toast('📍 Konum alındı (±'+q.acc+' m)');}
+    },function(){q.gps='fail';if(q.saved){pSave();renderPending();}},{enableHighAccuracy:true,timeout:15000,maximumAge:0});
+  } else q.gps='fail';
+}
+function quickPicked(input,cancelled){
+  var q=quickCtx;quickCtx=null;if(!q)return;
+  var f=!cancelled&&input.files&&input.files[0];input.value='';
+  var pid=f?uid():null;
+  (f?yPhotoPut(pid,f).then(function(){yUrls[pid]=URL.createObjectURL(f);}):Promise.resolve()).then(function(){
+    q.photo=pid;q.saved=true;pending.unshift(q);pSave();renderPending();
+    var msg=f?'⚡ Kaydedildi':'⚡ Sadece konum kaydedildi';
+    toast(msg+(q.gps==='ok'?' (±'+q.acc+' m)':(q.gps==='wait'?', konum alınıyor…':', konum alınamadı'))+'. Sonra “Bekleyenler”den tamamla.',3500);
+  }).catch(function(){toast('❌ Kaydedilemedi, tekrar dene',3000);});
+}
+function removePending(id){
+  var q=null;pending=pending.filter(function(x){if(x.id===id){q=x;return false;}return true;});
+  if(q&&q.photo)yPhotoDel(q.photo);
+  pSave();renderPending();
+}
+function openPending(){
+  var h='<div class="y-sheet"><div class="y-top"><div><h3>Bekleyenler</h3><div class="y-hint">Hızlı kayıtla işaretlediklerin. Tamamla’ya basınca ekran görüntüsü okunur, form dolu açılır.</div></div><button class="y-x" onclick="yClose()">✕</button></div>';
+  if(!pending.length)h+='<div class="y-empty">Bekleyen kayıt yok.</div>';
+  else h+='<div class="y-items">'+pending.map(function(q){
+    var loc=q.lat!=null?'📍 Konum alındı (±'+(q.acc||'?')+' m)':(q.gps==='wait'?'⏳ Konum bekleniyor':'⚠️ Konum yok, adresten bulunacak');
+    return '<div class="p-item">'+(q.photo?'<span class="y-photos" style="display:contents"><img data-pid="'+q.photo+'" data-yact="viewphoto" alt=""></span>':'<span class="noimg">📍</span>')
+      +'<span class="y-txt"><b>'+pTime(q.t)+'</b><span class="sub">'+loc+'</span><span class="y-hint">'+(q.photo?'Ekran görüntüsü var':'Ekran görüntüsü yok')+'</span></span>'
+      +'<span class="p-actions"><button class="btn-sm go" data-yact="pdone" data-id="'+q.id+'">Tamamla</button><button class="btn-sm danger" data-yact="pdel" data-id="'+q.id+'">Sil</button></span></div>';
+  }).join('')+'</div>';
+  h+='</div>';
+  yOpenSheet(h);
+}
+function pendingClick(a,id){
+  if(a==='pdone'){completePending(id);return true;}
+  if(a==='pdel'){if(confirm('Bu bekleyen kayıt silinsin mi?')){removePending(id);openPending();}return true;}
+  return false;
+}
+function completePending(id){
+  var q=null;pending.forEach(function(x){if(x.id===id)q=x;});if(!q)return;
+  yClose();
+  var blobP=q.photo?yPhotoGet(q.photo).then(function(r){return r&&r.blob;}):Promise.resolve(null);
+  blobP.then(function(blob){return processShot(blob,q.lat!=null?{lat:q.lat,lng:q.lng,acc:q.acc}:null,{pendingId:q.id,pid:q.photo});});
+}
+
+// Sadece ekran görüntüsü (konum yok) → adresten bul
+function shotOnly(){document.getElementById('shot-input').click();}
+function shotPicked(input){
+  var f=input.files&&input.files[0];input.value='';if(!f)return;
+  var pid='tmp_'+uid();yUrls[pid]=URL.createObjectURL(f);
+  processShot(f,null,{pid:pid});
+}
+// Form içinden: ekran görüntüsünü oku → kodları/adresi forma ekle
+function shotFormPicked(input){
+  var f=input.files&&input.files[0];input.value='';if(!f)return;
+  ocrBlob(f).then(function(text){
+    ocrHide();if(text==null)return;
+    var info=parseShot(text);
+    document.getElementById('f-paste').value='';
+    var added=fillCodes(info.codes);
+    if(info.notes&&document.getElementById('f-paste-note').checked){var n=document.getElementById('f-note');if(n.value.indexOf(info.notes)<0)n.value=(n.value?n.value+'\n':'')+info.notes;}
+    var st=document.getElementById('paste-status');
+    st.textContent=info.codes.length?'✅ Görüntüden '+info.codes.length+' kod okundu. Kontrol et.':'Görüntüde kod bulamadım.';st.className='loc-status '+(info.codes.length?'ok':'err');
+    if(info.addr&&!document.getElementById('f-lat').value){
+      document.getElementById('f-addr').value=info.addr.full;
+      geocodeAddr(info.addr.full).then(function(g){if(g){pickAddr(g.lat,g.lng,info.addr.full);setLocStatus('📍 Adresten bulundu, pini kapıya sürükleyebilirsin','ok');}});
+    }
+  });
+}
+
+// Ortak akış: görüntüyü oku, ayıkla, konumu belirle, formu doldurulmuş aç
+function processShot(blob,gps,opt){
+  opt=opt||{};
+  var textP=blob?ocrBlob(blob):Promise.resolve('');
+  return textP.then(function(text){
+    if(text==null)return; // iptal
+    var info=parseShot(text||'');
+    ocrStatus('Konum ve adres hazırlanıyor…');
+    var locP;
+    if(gps){
+      locP=reverseAddr(gps.lat,gps.lng).then(function(rev){
+        var res={lat:gps.lat,lng:gps.lng,src:'gps',acc:gps.acc,rev:rev};
+        if(!info.addr)return res;
+        return geocodeAddr(info.addr.full).then(function(g){if(g){res.addrGeo=g;res.dist=distM(gps.lat,gps.lng,g.lat,g.lng);}return res;});
+      });
+    } else if(info.addr){
+      locP=geocodeAddr(info.addr.full).then(function(g){return g?{lat:g.lat,lng:g.lng,src:'addr'}:{src:'none'};});
+    } else locP=Promise.resolve({src:'none'});
+    return locP.then(function(loc){
+      ocrHide();
+      var addrTxt=info.addr?info.addr.full:(loc.rev||'');
+      var name=info.addr?info.addr.street:(addrTxt?addrTxt.split(',').slice(0,2).join(',').trim():'');
+      var isWc=/restroom|bathroom|toilet|\bwc\b|tuvalet/i.test(text||'');
+      openAddPrefilled({lat:loc.lat,lng:loc.lng,name:name,addr:addrTxt,codes:info.codes,note:info.notes,kind:isWc?'wc':'gate',
+        pendingId:opt.pendingId||null,pid:opt.pid||null,loc:loc,hadText:!!(text&&text.trim())});
+    });
+  }).catch(function(e){ocrHide();toast('❌ Okunamadı: '+((e&&e.message)||'bilinmeyen hata'),4000);});
+}
+function openAddPrefilled(o){
+  openAdd();
+  pendingCompleting=o.pendingId;
+  setKind(o.kind||'gate');
+  document.getElementById('modal-title').textContent=o.pendingId?'Bekleyen kaydı tamamla':'Ekran görüntüsünden kayıt';
+  document.getElementById('f-name').value=o.name||'';
+  document.getElementById('f-addr').value=o.addr||'';
+  if(o.note)document.getElementById('f-note').value=o.note;
+  if(o.codes&&o.codes.length)fillCodes(o.codes);
+  var sh=document.getElementById('f-shot');
+  if(o.pid){
+    sh.innerHTML='<div class="shot-row"><span class="y-photos"><img data-pid="'+o.pid+'" data-yact="viewphoto" alt="Ekran görüntüsü"></span><span class="y-txt"><b style="font-size:13px">Ekran görüntüsü</b><span class="y-hint">'+(o.hadText?(o.codes.length?o.codes.length+' kod okundu. Yanlış varsa düzelt. ':'Kod bulunamadı, elle yaz. ')+'Büyütmek için dokun.':'Yazı okunamadı. Büyütüp kodu elle yaz.')+'</span></span></div>';
+    sh.hidden=false;yHydrate(sh);
+  }
+  var loc=o.loc||{};
+  setTimeout(function(){
+    if(o.lat!=null){
+      initMap(o.lat,o.lng);document.getElementById('f-lat').value=o.lat;document.getElementById('f-lng').value=o.lng;
+      setLocStatus(loc.src==='gps'?'✅ İşaretlediğin nokta (±'+(loc.acc||'?')+' m)':'📍 Adresten bulundu. Pini kapıya sürükleyebilirsin','ok');
+      if(loc.src==='gps'&&loc.addrGeo&&loc.dist>250){
+        var w=document.createElement('div');w.className='loc-warn';w.id='loc-warn';
+        w.innerHTML='⚠️ Görüntüdeki adres işaretlediğin yerden '+fmtDist(loc.dist)+' uzakta.<button type="button">Adresin konumunu kullan</button>';
+        w.querySelector('button').onclick=function(){pickAddr(loc.addrGeo.lat,loc.addrGeo.lng,o.addr);setLocStatus('📍 Adresin konumu kullanıldı','ok');w.remove();};
+        document.getElementById('loc-status').after(w);
+      }
+    } else setLocStatus('⚠️ Konum bulunamadı. Adresi ara ya da haritaya dokun.','err');
+  },320);
+}
+
+// Adres ↔ konum (OpenStreetMap)
+function geocodeAddr(q){
+  var bias=lastPos?'&viewbox='+(lastPos.lng-0.8)+','+(lastPos.lat+0.8)+','+(lastPos.lng+0.8)+','+(lastPos.lat-0.8):'';
+  return fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q)+'&format=json&limit=1&countrycodes=us&accept-language=en'+bias)
+    .then(function(r){return r.json();}).then(function(d){return d&&d[0]?{lat:+d[0].lat,lng:+d[0].lon}:null;}).catch(function(){return null;});
+}
+function reverseAddr(lat,lng){
+  return fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lng+'&format=json&accept-language=en')
+    .then(function(r){return r.json();}).then(function(d){return d&&d.display_name?d.display_name.split(',').slice(0,4).join(',').trim():'';}).catch(function(){return '';});
+}
+
+// Ekran görüntüsü metninden adres + kod + talimat
+var STREET_SUFFIX='St|Street|Ave|Avenue|Dr|Drive|Rd|Road|Blvd|Boulevard|Ln|Lane|Way|Ct|Court|Pl|Place|Pkwy|Parkway|Cir|Circle|Ter|Terrace|Trl|Trail|Loop|Hwy|Highway|Sq|Square|Row|Walk|Path|Run|Pt|Point|Cv|Cove|Xing|Plz|Plaza|Mall|Aly|Alley';
+function findAddress(lines){
+  var st=new RegExp('(?:^|\\s)(\\d{1,6})\\s+((?:[NSEW]\\.?\\s+)?[A-Za-z0-9][A-Za-z0-9 .\'-]{1,40}?\\s(?:'+STREET_SUFFIX+'))\\b\\.?','i');
+  var cityRe=/([A-Za-z][A-Za-z .'-]{1,30}),\s*([A-Z]{2})\b\s*(\d{5})?/;
+  for(var i=0;i<lines.length;i++){
+    var m=lines[i].match(st);if(!m)continue;
+    var street=(m[1]+' '+m[2]).replace(/\s+/g,' ').trim();
+    var rest=lines[i].slice(m.index+m[0].length),city='';
+    var cm=rest.match(cityRe)||(lines[i+1]||'').match(cityRe)||(lines[i+2]||'').match(cityRe);
+    if(cm)city=cm[1].trim()+', '+cm[2]+(cm[3]?' '+cm[3]:'');
+    return {num:m[1],street:street,full:street+(city?', '+city:'')};
+  }
+  return null;
+}
+var NOTE_RE=/\b(gate|code|call\s*box|callbox|door|lobby|access|buzz|press|key|entry|entrance|elevator|garage|leave|front|back|side|restroom|bathroom|password|pin)\b/i;
+var NOISE_RE=/^(deliver|navigate|scan|swipe|tap|arrived|start|continue|done|help|back|call customer|text customer|contact|details|\d{1,2}:\d{2}\s*(am|pm)?)$/i;
+function parseShot(text){
+  var t=cleanPasted(text||'');
+  var lines=t.split(/\n/).map(function(l){return l.replace(/\s+/g,' ').trim();}).filter(function(l){return l.length>1;});
+  var addr=findAddress(lines);
+  var codeLines=lines.filter(function(l){return !(addr&&l.indexOf(addr.street)>=0&&!NOTE_RE.test(l));});
+  var codes=extractCodes(codeLines.join('\n'));
+  if(addr)codes=codes.filter(function(c){return c.code.replace(/[#*]/g,'')!==addr.num;});
+  var notes=lines.filter(function(l){return NOTE_RE.test(l)&&!NOISE_RE.test(l)&&l.length<160;}).slice(0,8).join('\n');
+  return {codes:codes,addr:addr,notes:notes};
+}
+
+// OCR motoru (Tesseract, telefonun içinde çalışır; ilk kullanımda bir kez indirilir)
+var ocrWorker=null,ocrIdleT=null,ocrCancelled=false,ocrLoading=null;
+function ocrShow(t,sub){document.getElementById('ocr-title').textContent=t;document.getElementById('ocr-sub').textContent=sub||'';document.getElementById('ocr-overlay').classList.add('show');}
+function ocrStatus(sub){document.getElementById('ocr-sub').textContent=sub;}
+function ocrHide(){document.getElementById('ocr-overlay').classList.remove('show');}
+function ocrCancel(){ocrCancelled=true;ocrHide();}
+function loadScript(src){return new Promise(function(res,rej){var s=document.createElement('script');s.src=src;s.onload=res;s.onerror=function(){rej(new Error('Yazı okuyucu indirilemedi. İnternet bağlantını kontrol et.'));};document.head.appendChild(s);});}
+function getOcrWorker(){
+  clearTimeout(ocrIdleT);
+  if(ocrWorker)return Promise.resolve(ocrWorker);
+  if(ocrLoading)return ocrLoading;
+  var first=!storeGet('ocr_ready');
+  ocrStatus(first?'Yazı okuyucu ilk kez indiriliyor (bir kerelik, birkaç MB)…':'Yazı okuyucu hazırlanıyor…');
+  ocrLoading=(window.Tesseract?Promise.resolve():loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js'))
+    .then(function(){
+      return Tesseract.createWorker('eng',1,{logger:function(m){
+        if(m.status==='recognizing text')ocrStatus('Yazılar okunuyor… %'+Math.round((m.progress||0)*100));
+        else if(/load|download/i.test(m.status||''))ocrStatus((first?'İlk kurulum: ':'')+'yazı okuyucu yükleniyor… %'+Math.round((m.progress||0)*100));
+      }});
+    })
+    .then(function(w){ocrWorker=w;ocrLoading=null;storeSet('ocr_ready','1');return w;})
+    .catch(function(e){ocrLoading=null;throw e;});
+  return ocrLoading;
+}
+function ocrRelease(){clearTimeout(ocrIdleT);ocrIdleT=setTimeout(function(){if(ocrWorker){ocrWorker.terminate();ocrWorker=null;}},90000);}
+// Koyu temalı ekranları açık temaya çevir, gri tonla: okuma doğruluğunu artırır
+function prepForOcr(blob){
+  return new Promise(function(res){
+    var img=new Image(),u=URL.createObjectURL(blob);
+    img.onload=function(){
+      var sc=Math.min(1,2000/Math.max(img.width,img.height)),c=document.createElement('canvas');
+      c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);
+      var x=c.getContext('2d');x.drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);
+      try{
+        var d=x.getImageData(0,0,c.width,c.height),p=d.data,sum=0;
+        for(var i=0;i<p.length;i+=4)sum+=0.299*p[i]+0.587*p[i+1]+0.114*p[i+2];
+        var inv=(sum/(p.length/4))<110;
+        for(var j=0;j<p.length;j+=4){var g=0.299*p[j]+0.587*p[j+1]+0.114*p[j+2];if(inv)g=255-g;p[j]=p[j+1]=p[j+2]=g;}
+        x.putImageData(d,0,0);
+      }catch(e){}
+      c.toBlob(function(b){res(b||blob);},'image/png');
+    };
+    img.onerror=function(){URL.revokeObjectURL(u);res(blob);};
+    img.src=u;
+  });
+}
+function ocrBlob(blob){
+  ocrCancelled=false;
+  ocrShow('Ekran görüntüsü okunuyor','Hazırlanıyor…');
+  return prepForOcr(blob).then(function(pb){
+    return getOcrWorker().then(function(w){
+      if(ocrCancelled)return null;
+      ocrStatus('Yazılar okunuyor…');
+      return w.recognize(pb).then(function(r){ocrRelease();return ocrCancelled?null:((r&&r.data&&r.data.text)||'');});
+    });
+  }).catch(function(e){
+    ocrHide();
+    toast('⚠️ '+((e&&e.message)||'Yazı okunamadı')+' Konumla devam ediliyor.',4500);
+    return ocrCancelled?null:'';
+  });
+}
 
 // ── SETTINGS ───────────────────────────────────────────────
 function toggleSetting(key,btn){settings[key]=!settings[key];btn.classList.toggle('on',settings[key]);save();}
@@ -1763,6 +2062,7 @@ function yFoodClick(a,id,t){
   if(a==='delbrand'){yDeleteBrand(id);return true;}
   if(a==='addbranch'){yAddBranch(id,null);return true;}
   if(a==='brandfromplace'){var p=yPlace(id);if(!p)return true;var b=yFindBrandByName(p.name)||yEnsureBrand(p.name);p.brandId=b.id;ySave();yOpenBrand(b.id);return true;}
+  if(pendingClick(a,id))return true;
   if(a==='viewphoto'){var box=t.closest('.y-photos'),lst=box?[].map.call(box.querySelectorAll('img[data-pid]'),function(i){return i.getAttribute('data-pid');}):null;yViewPhoto(t.getAttribute('data-pid'),lst);return true;}
   return false;
 }
@@ -1873,7 +2173,7 @@ function yReplace(){
 }
 
 // ── INIT ───────────────────────────────────────────────────
-load();applySettings();applyCodeFilterUI();applyDefaultKindUI();render();
+load();pLoad();applySettings();applyCodeFilterUI();applyDefaultKindUI();render();renderPending();
 yLoad();yApplySettings();
 yOpenIdb().then(function(db){yIdb=db;if(curSec==='places')yRender();});
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(function(){});
